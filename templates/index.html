@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Password Strength Checker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to right, #4e73df, #1cc88a);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            text-align: center;
+            width: 350px;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+        }
+
+        input {
+            width: 90%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4e73df;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #2e59d9;
+        }
+
+        .weak {
+            color: red;
+            font-weight: bold;
+        }
+
+        .medium {
+            color: orange;
+            font-weight: bold;
+        }
+
+        .strong {
+            color: green;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Password Strength Analyzer</h2>
+
+    <form method="POST">
+        <input type="password" name="password" placeholder="Enter password" required>
+        <br>
+        <button type="submit">Check</button>
+    </form>
+
+    {% if result %}
+        <h3>
+            Strength:
+            <span class="
+                {% if result == 'Weak' %}weak
+                {% elif result == 'Medium' %}medium
+                {% else %}strong
+                {% endif %}
+            ">
+                {{ result }}
+            </span>
+        </h3>
+    {% endif %}
+</div>
+
+<script>
+    const passwordInput = document.querySelector("input");
+    const resultDisplay = document.createElement("h3");
+    document.querySelector(".container").appendChild(resultDisplay);
+
+    passwordInput.addEventListener("input", function() {
+        fetch("/check", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({password: passwordInput.value})
+        })
+        .then(response => response.json())
+        .then(data => {
+            let strength = data.strength;
+            resultDisplay.innerHTML = "Strength: <span class='" + strength.toLowerCase() + "'>" + strength + "</span>";
+        });
+    });
+</script>
+</body>
+</html>
