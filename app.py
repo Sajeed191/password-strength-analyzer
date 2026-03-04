@@ -3,6 +3,7 @@ import re
 
 app = Flask(__name__)
 
+# Function to check password strength
 def check_strength(password):
     score = 0
 
@@ -18,24 +19,23 @@ def check_strength(password):
         score += 1
 
     if score <= 2:
-        return "Weak"
-    elif score <= 4:
-        return "Medium"
+        return "🔴 Weak Password"
+    elif score == 3 or score == 4:
+        return "🟡 Medium Password"
     else:
-        return "Strong"
+        return "🟢 Strong Password"
 
 
-@app.route("/", methods=["GET"])
+# Home route
+@app.route("/", methods=["GET", "POST"])
 def home():
-    return render_template("index.html", result="")
+    if request.method == "POST":
+        password = request.form.get("password", "")
+        return check_strength(password)
+
+    return render_template("index.html")
 
 
-@app.route("/check", methods=["POST"])
-def check():
-    password = request.form["password"]   # ✅ FIX HERE
-    result = check_strength(password)
-    return render_template("index.html", result=result)
-
-
+# Run the app
 if __name__ == "__main__":
     app.run(debug=True)
