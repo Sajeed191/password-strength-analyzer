@@ -2,21 +2,28 @@ from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.middleware.proxy_fix import ProxyFix
 import os
 
 app = Flask(__name__)
 
-app.config['SECRET_KEY'] = 'supersecretkey'
+# ================= SECURITY CONFIG =================
+
+app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY", "supersecretkey123")
+
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Fix for Render HTTPS proxy (VERY IMPORTANT)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+
+# ================= DATABASE =================
 
 db = SQLAlchemy(app)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
-
-# ================= DATABASE =================
 
 class User(UserMixin, db.Model):
     __tablename__ = "user"
@@ -28,7 +35,7 @@ class User(UserMixin, db.Model):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Create tables (IMPORTANT FOR RENDER)
+# Create tables automatically (for Render)
 with app.app_context():
     db.create_all()
 
