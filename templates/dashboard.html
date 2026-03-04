@@ -6,138 +6,169 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: Arial, sans-serif;
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial, sans-serif;
 }
 
-body {
-    background: #0f172a;
-    color: white;
-    overflow-x: hidden;
+body{
+    background:#0f172a;
+    color:white;
 }
 
 /* TOP BAR */
-.topbar {
-    height: 60px;
-    background: #111827;
-    display: flex;
-    align-items: center;
-    padding: 0 20px;
+.topbar{
+    height:60px;
+    background:#111827;
+    display:flex;
+    align-items:center;
+    padding:0 20px;
 }
 
-.menu-btn {
-    font-size: 24px;
-    cursor: pointer;
+.menu-btn{
+    font-size:24px;
+    cursor:pointer;
 }
 
 /* SIDEBAR */
-.sidebar {
-    position: fixed;
-    left: -260px;
-    top: 0;
-    width: 260px;
-    height: 100vh;
-    background: #111827;
-    padding: 30px 20px;
-    transition: 0.4s ease;
-    z-index: 1000;
+.sidebar{
+    position:fixed;
+    left:-260px;
+    top:0;
+    width:260px;
+    height:100vh;
+    background:#111827;
+    padding:30px 20px;
+    transition:0.4s ease;
+    z-index:1001;
 }
 
-.sidebar.active {
-    left: 0;
+.sidebar.active{
+    left:0;
 }
 
-.sidebar h2 {
-    margin-bottom: 40px;
+.sidebar h2{
+    margin-bottom:40px;
 }
 
-.sidebar a {
-    display: block;
-    padding: 12px;
-    margin-bottom: 10px;
-    text-decoration: none;
-    color: #cbd5e1;
-    border-radius: 8px;
-    transition: 0.3s;
+.sidebar a{
+    display:block;
+    padding:12px;
+    margin-bottom:10px;
+    text-decoration:none;
+    color:#cbd5e1;
+    border-radius:8px;
+    transition:0.3s;
 }
 
-.sidebar a:hover {
-    background: #1e293b;
-    color: white;
+.sidebar a:hover{
+    background:#1e293b;
+    color:white;
+}
+
+/* OVERLAY */
+.overlay{
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.6);
+    opacity:0;
+    visibility:hidden;
+    transition:0.4s;
+    z-index:1000;
+}
+
+.overlay.active{
+    opacity:1;
+    visibility:visible;
 }
 
 /* MAIN CONTENT */
-.main {
-    padding: 40px;
-    transition: 0.4s ease;
+.main{
+    padding:40px;
 }
 
-.main.full {
-    margin-left: 0;
+/* PAGE SECTIONS */
+.page{
+    display:none;
+    animation:fadeIn 0.4s ease;
 }
 
-.card {
-    background: #1e293b;
-    padding: 20px;
-    border-radius: 12px;
-    margin-bottom: 20px;
+.page.active{
+    display:block;
 }
 
-.analyzer {
-    background: #1e293b;
-    padding: 30px;
-    border-radius: 12px;
+@keyframes fadeIn{
+    from{opacity:0;}
+    to{opacity:1;}
 }
 
-input {
-    width: 100%;
-    padding: 12px;
-    margin-top: 15px;
-    border-radius: 8px;
-    border: none;
+/* CARDS */
+.card{
+    background:#1e293b;
+    padding:20px;
+    border-radius:12px;
+    margin-bottom:20px;
 }
 
-button {
-    margin-top: 15px;
-    padding: 12px;
-    width: 100%;
-    border-radius: 8px;
-    border: none;
-    background: #3b82f6;
-    color: white;
-    cursor: pointer;
+.analyzer{
+    background:#1e293b;
+    padding:30px;
+    border-radius:12px;
 }
 
-.progress-bar {
-    margin-top: 20px;
-    height: 12px;
-    background: #334155;
-    border-radius: 10px;
-    overflow: hidden;
+input{
+    width:100%;
+    padding:12px;
+    margin-top:15px;
+    border-radius:8px;
+    border:none;
 }
 
-.progress-fill {
-    height: 100%;
-    width: {{ percentage if percentage else 0 }}%;
-    background: #22c55e;
-    transition: 0.5s ease;
+button{
+    margin-top:15px;
+    padding:12px;
+    width:100%;
+    border-radius:8px;
+    border:none;
+    background:#3b82f6;
+    color:white;
+    cursor:pointer;
 }
 
-.result-box {
-    margin-top: 20px;
-    padding: 15px;
-    background: #0f172a;
-    border-radius: 10px;
+.progress-bar{
+    margin-top:20px;
+    height:12px;
+    background:#334155;
+    border-radius:10px;
+    overflow:hidden;
+}
+
+.progress-fill{
+    height:100%;
+    width:{{ percentage if percentage else 0 }}%;
+    background:#22c55e;
+    transition:0.5s ease;
+}
+
+/* DESKTOP */
+@media(min-width:768px){
+    .sidebar{
+        left:0;
+    }
+    .overlay{
+        display:none;
+    }
 }
 </style>
 </head>
 
 <body>
 
-<!-- TOP BAR -->
 <div class="topbar">
     <div class="menu-btn" onclick="openSidebar()">☰</div>
 </div>
@@ -146,59 +177,105 @@ button {
 <div class="sidebar" id="sidebar">
     <h2>🔐 SecureVault</h2>
 
-    <a href="#" onclick="selectDashboard()">🏠 Dashboard</a>
-    <a href="#" onclick="closeSidebar()">📊 Analytics</a>
-    <a href="#" onclick="closeSidebar()">👤 Profile</a>
+    <a href="#" onclick="showPage('dashboard')">🏠 Dashboard</a>
+    <a href="#" onclick="showPage('analytics')">📊 Analytics</a>
+    <a href="#" onclick="showPage('profile')">👤 Profile</a>
     <a href="/logout">🚪 Logout</a>
 </div>
 
-<!-- MAIN CONTENT -->
-<div class="main" id="main">
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
 
-    <h1>Welcome, {{ current_user.username }}</h1>
-    <br>
+<!-- MAIN -->
+<div class="main">
 
-    <div class="card">
-        <h3>Security Score</h3>
-        <p>{{ percentage if percentage else 0 }}%</p>
+    <!-- DASHBOARD PAGE -->
+    <div id="dashboard" class="page active">
+        <h1>Welcome, {{ current_user.username }}</h1>
+        <br>
+
+        <div class="card">
+            <h3>Security Score</h3>
+            <p>{{ percentage if percentage else 0 }}%</p>
+        </div>
+
+        <div class="analyzer">
+            <h2>Password Analyzer</h2>
+
+            <form method="POST">
+                <input type="text" name="password" placeholder="Enter password..." required>
+                <button type="submit">Analyze</button>
+            </form>
+
+            {% if percentage %}
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+            {% endif %}
+        </div>
     </div>
 
-    <div class="analyzer">
-        <h2>Password Analyzer</h2>
+    <!-- ANALYTICS PAGE -->
+    <div id="analytics" class="page">
+        <h1>📊 Analytics</h1>
+        <br>
 
-        <form method="POST">
-            <input type="text" name="password" placeholder="Enter password..." required>
-            <button type="submit">Analyze</button>
-        </form>
-
-        {% if percentage %}
-        <div class="progress-bar">
-            <div class="progress-fill"></div>
+        <div class="card">
+            <h3>Total Passwords Checked</h3>
+            <p>25</p>
         </div>
 
-        <div class="result-box">
-            <p><strong>Strength:</strong> {{ strength }}</p>
-            <p><strong>Score:</strong> {{ percentage }}%</p>
-            <p><strong>Generated Password:</strong></p>
-            <p>{{ generated_password }}</p>
+        <div class="card">
+            <h3>Strong Passwords</h3>
+            <p>18</p>
         </div>
-        {% endif %}
+
+        <div class="card">
+            <h3>Weak Passwords</h3>
+            <p>7</p>
+        </div>
+    </div>
+
+    <!-- PROFILE PAGE -->
+    <div id="profile" class="page">
+        <h1>👤 Profile</h1>
+        <br>
+
+        <div class="card">
+            <h3>Username</h3>
+            <p>{{ current_user.username }}</p>
+        </div>
+
+        <div class="card">
+            <h3>Email</h3>
+            <p>user@example.com</p>
+        </div>
+
+        <div class="card">
+            <h3>Account Status</h3>
+            <p>Active</p>
+        </div>
     </div>
 
 </div>
 
 <script>
-function openSidebar() {
+function openSidebar(){
     document.getElementById("sidebar").classList.add("active");
+    document.getElementById("overlay").classList.add("active");
 }
 
-function closeSidebar() {
+function closeSidebar(){
     document.getElementById("sidebar").classList.remove("active");
+    document.getElementById("overlay").classList.remove("active");
 }
 
-function selectDashboard() {
-    // Close sidebar
-    document.getElementById("sidebar").classList.remove("active");
+function showPage(pageId){
+    const pages=document.querySelectorAll(".page");
+    pages.forEach(page=>page.classList.remove("active"));
+
+    document.getElementById(pageId).classList.add("active");
+
+    closeSidebar();
 }
 </script>
 
