@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Password Strength Checker</title>
+    <title>Cyber Password Analyzer</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            margin: 0;
+            font-family: Arial;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            color: white;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -13,44 +15,84 @@
         }
 
         .container {
-            background: white;
+            background: rgba(255,255,255,0.1);
             padding: 30px;
-            border-radius: 10px;
-            width: 350px;
-            text-align: center;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            border-radius: 15px;
+            width: 400px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px rgba(0,255,255,0.5);
         }
 
-        input {
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: none;
+        }
+
+        .eye {
+            cursor: pointer;
+            margin-top: 5px;
+            display: inline-block;
+        }
+
+        .bar {
+            height: 15px;
+            background: grey;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+
+        .fill {
+            height: 100%;
+            width: 0%;
+            border-radius: 10px;
+            transition: 0.5s;
+        }
+
+        .result {
+            margin-top: 10px;
+        }
+
+        button {
             width: 100%;
             padding: 10px;
             margin-top: 15px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-        }
-
-        #result {
-            margin-top: 15px;
+            border-radius: 8px;
+            border: none;
+            background: cyan;
             font-weight: bold;
+            cursor: pointer;
         }
 
-        .toggle {
-            margin-top: 10px;
-            cursor: pointer;
-            font-size: 14px;
-            color: #667eea;
-        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Password Strength Checker</h2>
+    <h2>Cyber Password Analyzer</h2>
 
-    <input type="password" id="password" placeholder="Enter password">
-    <div class="toggle" onclick="togglePassword()">Show / Hide Password</div>
+    <input type="password" id="password" placeholder="Enter Password">
+    <span class="eye" onclick="togglePassword()">👁 Show/Hide</span>
 
-    <div id="result"></div>
+    <select id="website">
+        <option value="Amazon">Amazon</option>
+        <option value="Flipkart">Flipkart</option>
+        <option value="Ajio">Ajio</option>
+        <option value="Instagram">Instagram</option>
+        <option value="Facebook">Facebook</option>
+    </select>
+
+    <button onclick="checkPassword()">Analyze</button>
+
+    <div class="bar">
+        <div class="fill" id="strengthBar"></div>
+    </div>
+
+    <div class="result" id="level"></div>
+    <div class="result" id="similarity"></div>
+    <div class="result" id="suggestion"></div>
 </div>
 
 <script>
@@ -59,19 +101,32 @@ function togglePassword() {
     x.type = x.type === "password" ? "text" : "password";
 }
 
-document.getElementById("password").addEventListener("input", function() {
-    fetch("/", {
+function checkPassword() {
+    let password = document.getElementById("password").value;
+    let website = document.getElementById("website").value;
+
+    fetch("/check", {
         method: "POST",
         headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
+            "Content-Type": "application/json"
         },
-        body: "password=" + this.value
+        body: JSON.stringify({ password: password, website: website })
     })
-    .then(response => response.text())
+    .then(response => response.json())
     .then(data => {
-        document.getElementById("result").innerHTML = data;
+        document.getElementById("strengthBar").style.width = data.strength + "%";
+        document.getElementById("strengthBar").style.background =
+            data.strength < 40 ? "red" :
+            data.strength < 60 ? "orange" :
+            data.strength < 80 ? "yellow" : "lime";
+
+        document.getElementById("level").innerHTML = "Strength: " + data.level + " (" + data.strength + "%)";
+        document.getElementById("similarity").innerHTML =
+            "Similar Password Usage on " + website + ": " + data.similarity + "%";
+        document.getElementById("suggestion").innerHTML =
+            "Suggested Strong Password: " + data.suggestion;
     });
-});
+}
 </script>
 
 </body>
