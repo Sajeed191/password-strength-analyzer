@@ -13,23 +13,29 @@ app = Flask(__name__)
 
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "local-secret-key")
 
-# Handle Render PostgreSQL properly
+# Fix HTTPS proxy issue on Render
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+
+# =========================
+# DATABASE CONFIG (CRASH-SAFE)
+# =========================
+
 database_url = os.environ.get("DATABASE_URL")
 
-if database_url:
-    if database_url.startswith("postgres://"):
+try:
+    if database_url and database_url.startswith(("postgres://", "postgresql://")):
         database_url = database_url.replace("postgres://", "postgresql://", 1)
-    app.config["SQLALCHEMY_DATABASE_URI"] = database_url
-else:
+        app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+    else:
+        raise ValueError("Invalid or missing DATABASE_URL")
+except:
+    # fallback to SQLite if anything is wrong
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db"
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-# Fix HTTPS Proxy issue on Render
-app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
-
 # =========================
-# DATABASE SETUP
+# DATABASE INIT
 # =========================
 
 db = SQLAlchemy(app)
@@ -52,7 +58,7 @@ class User(UserMixin, db.Model):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# 🔥 VERY IMPORTANT (creates tables on Render automatically)
+# Create tables automatically (important for Render)
 with app.app_context():
     db.create_all()
 
@@ -118,7 +124,7 @@ def logout():
     return redirect(url_for("login"))
 
 # =========================
-# RUN LOCAL ONLY
+# LOCAL RUN
 # =========================
 if __name__ == "__main__":
     app.run(debug=True)
