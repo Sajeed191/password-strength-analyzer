@@ -2,10 +2,14 @@ from flask import Flask, render_template, request, jsonify
 import re
 import random
 import string
+import hashlib
+import requests
 
 app = Flask(__name__)
 
-# Check password strength score
+# -----------------------
+# PASSWORD STRENGTH CHECK
+# -----------------------
 def check_strength(password):
     score = 0
 
@@ -22,20 +26,44 @@ def check_strength(password):
 
     return score
 
-# Generate strong suggestion
+
+# -----------------------
+# BREACHED PASSWORD CHECK
+# -----------------------
+def check_breach(password):
+    sha1_password = hashlib.sha1(password.encode()).hexdigest().upper()
+    prefix = sha1_password[:5]
+    suffix = sha1_password[5:]
+
+    url = f"https://api.pwnedpasswords.com/range/{prefix}"
+    response = requests.get(url)
+
+    if response.status_code != 200:
+        return 0
+
+    hashes = (line.split(":") for line in response.text.splitlines())
+    for h, count in hashes:
+        if h == suffix:
+            return int(count)
+
+    return 0
+
+
+# -----------------------
+# PASSWORD SUGGESTION
+# -----------------------
 def generate_suggestion(password):
     extra = ''.join(random.choices(string.ascii_letters + string.digits + "@#$%", k=5))
     return password.capitalize() + extra
 
-# Simulate similar password usage %
-def similar_usage(password, website):
-    common_patterns = ["123", "password", "admin", website.lower()]
-    match_score = sum(pattern in password.lower() for pattern in common_patterns)
-    return min(90, match_score * 25 + random.randint(5, 20))
 
+# -----------------------
+# ROUTES
+# -----------------------
 @app.route("/")
 def home():
     return render_template("index.html")
+
 
 @app.route("/check", methods=["POST"])
 def check():
@@ -44,8 +72,8 @@ def check():
     website = data.get("website", "")
 
     strength = check_strength(password)
+    breach_count = check_breach(password)
     suggestion = generate_suggestion(password)
-    similarity = similar_usage(password, website)
 
     if strength < 40:
         level = "Poor"
@@ -59,9 +87,10 @@ def check():
     return jsonify({
         "strength": strength,
         "level": level,
-        "suggestion": suggestion,
-        "similarity": similarity
+        "breach_count": breach_count,
+        "suggestion": suggestion
     })
+
 
 if __name__ == "__main__":
     app.run(debug=True)
