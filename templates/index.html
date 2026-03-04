@@ -1,79 +1,128 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>CyberShield Pro</title>
+<title>CyberShield X</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 body {
-    margin: 0;
-    font-family: Arial;
-    background: #0f2027;
-    color: white;
-    text-align: center;
-    padding: 20px;
+    margin:0;
+    font-family: 'Segoe UI';
+    background: linear-gradient(135deg,#0f0c29,#302b63,#24243e);
+    color:white;
+    text-align:center;
+    padding:40px;
 }
-input, button {
-    padding: 10px;
-    width: 90%;
-    max-width: 400px;
-    margin-top: 10px;
-    border-radius: 8px;
-    border: none;
+
+.container {
+    backdrop-filter: blur(20px);
+    background: rgba(255,255,255,0.1);
+    padding:30px;
+    border-radius:20px;
+    max-width:500px;
+    margin:auto;
+    box-shadow:0 0 40px rgba(0,255,255,0.4);
 }
-button { cursor: pointer; font-weight: bold; }
-.bar { height: 20px; background: gray; border-radius: 10px; margin: 15px auto; max-width: 400px; }
-.fill { height: 100%; width: 0%; border-radius: 10px; transition: 0.5s; }
+
+input, select, button {
+    width:100%;
+    padding:12px;
+    margin-top:15px;
+    border:none;
+    border-radius:10px;
+}
+
+button {
+    background: cyan;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+.bar {
+    height:20px;
+    background:#333;
+    border-radius:10px;
+    margin-top:20px;
+}
+
+.fill {
+    height:100%;
+    width:0%;
+    border-radius:10px;
+    transition:0.5s;
+}
+.eye {
+    cursor:pointer;
+}
 </style>
 </head>
+
 <body>
 
-<h2>CyberShield Pro 🔐</h2>
+<div class="container">
+<h2>CyberShield X 🔐</h2>
+
+<select id="website">
+<option>Amazon</option>
+<option>Flipkart</option>
+<option>Ajio</option>
+<option>Instagram</option>
+<option>Facebook</option>
+</select>
 
 <input type="password" id="password" placeholder="Enter Password">
-<button onclick="checkPassword()">Analyze</button>
-<button onclick="generatePassword()">Generate Strong Password</button>
+<span class="eye" onclick="togglePassword()">👁</span>
+
+<button onclick="analyze()">Analyze</button>
 
 <div class="bar">
-    <div class="fill" id="strengthBar"></div>
+<div class="fill" id="strengthBar"></div>
 </div>
 
-<div id="result"></div>
-<div id="breach"></div>
+<p id="result"></p>
+<p id="breach"></p>
+<p id="similarity"></p>
+<p id="suggestion"></p>
+
+</div>
 
 <script>
-function checkPassword(){
-    let password = document.getElementById("password").value;
-
-    fetch("/check", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({password: password})
-    })
-    .then(res => res.json())
-    .then(data => {
-        let bar = document.getElementById("strengthBar");
-        bar.style.width = data.strength + "%";
-        bar.style.background =
-            data.strength < 40 ? "red" :
-            data.strength < 60 ? "orange" :
-            data.strength < 80 ? "yellow" : "lime";
-
-        document.getElementById("result").innerHTML =
-            "Strength: " + data.level + " (" + data.strength + "%)";
-
-        document.getElementById("breach").innerHTML =
-            data.breach_count > 0 ?
-            "⚠ Found in breaches " + data.breach_count + " times" :
-            "✅ Not found in breaches";
-    });
+function togglePassword(){
+    let p = document.getElementById("password");
+    p.type = p.type === "password" ? "text" : "password";
 }
 
-function generatePassword(){
-    fetch("/generate")
-    .then(res => res.json())
-    .then(data => {
-        document.getElementById("password").value = data.password;
+function analyze(){
+    let password = document.getElementById("password").value;
+    let website = document.getElementById("website").value;
+
+    fetch("/check", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({password:password, website:website})
+    })
+    .then(res=>res.json())
+    .then(data=>{
+        let bar=document.getElementById("strengthBar");
+        bar.style.width=data.strength+"%";
+        bar.style.background=
+            data.strength<40?"red":
+            data.strength<60?"orange":
+            data.strength<80?"yellow":"lime";
+
+        document.getElementById("result").innerHTML=
+            "Strength: "+data.level+" ("+data.strength+"%)";
+
+        document.getElementById("breach").innerHTML=
+            data.breach_count>0?
+            "⚠ Found in breaches "+data.breach_count+" times":
+            "✅ Not found in breaches";
+
+        document.getElementById("similarity").innerHTML=
+            "Similarity on "+website+": "+data.similarity+"%";
+
+        document.getElementById("suggestion").innerHTML=
+            "Suggested Strong Password: "+data.suggestion;
     });
 }
 </script>
