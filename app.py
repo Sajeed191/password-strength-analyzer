@@ -7,6 +7,10 @@ import requests
 
 app = Flask(__name__)
 
+# Simple analytics counter
+total_checks = 0
+weak_passwords = 0
+
 # -----------------------
 # PASSWORD STRENGTH CHECK
 # -----------------------
@@ -28,7 +32,7 @@ def check_strength(password):
 
 
 # -----------------------
-# BREACHED PASSWORD CHECK
+# BREACH CHECK
 # -----------------------
 def check_breach(password):
     sha1_password = hashlib.sha1(password.encode()).hexdigest().upper()
@@ -50,16 +54,13 @@ def check_breach(password):
 
 
 # -----------------------
-# PASSWORD SUGGESTION
+# AI PASSWORD GENERATOR
 # -----------------------
-def generate_suggestion(password):
-    extra = ''.join(random.choices(string.ascii_letters + string.digits + "@#$%", k=5))
-    return password.capitalize() + extra
+def generate_ultra_password():
+    chars = string.ascii_letters + string.digits + "@#$%^&*!"
+    return ''.join(random.choices(chars, k=16))
 
 
-# -----------------------
-# ROUTES
-# -----------------------
 @app.route("/")
 def home():
     return render_template("index.html")
@@ -67,13 +68,18 @@ def home():
 
 @app.route("/check", methods=["POST"])
 def check():
+    global total_checks, weak_passwords
+
+    total_checks += 1
+
     data = request.json
     password = data.get("password", "")
-    website = data.get("website", "")
 
     strength = check_strength(password)
     breach_count = check_breach(password)
-    suggestion = generate_suggestion(password)
+
+    if strength < 60:
+        weak_passwords += 1
 
     if strength < 40:
         level = "Poor"
@@ -88,7 +94,15 @@ def check():
         "strength": strength,
         "level": level,
         "breach_count": breach_count,
-        "suggestion": suggestion
+        "total_checks": total_checks,
+        "weak_passwords": weak_passwords
+    })
+
+
+@app.route("/generate", methods=["GET"])
+def generate():
+    return jsonify({
+        "password": generate_ultra_password()
     })
 
 
