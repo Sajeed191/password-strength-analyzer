@@ -17,41 +17,81 @@ body {
     display: flex;
     background: #0f172a;
     color: white;
+    overflow-x: hidden;
 }
 
 /* SIDEBAR */
 .sidebar {
-    width: 250px;
+    width: 260px;
     height: 100vh;
-    background: #111827;
+    background: linear-gradient(180deg, #111827, #0f172a);
     padding: 30px 20px;
     position: fixed;
+    transition: 0.4s ease;
+    animation: slideIn 0.6s ease forwards;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
+}
+
+.sidebar.collapsed {
+    width: 80px;
 }
 
 .sidebar h2 {
     margin-bottom: 40px;
+    transition: 0.3s;
+}
+
+.sidebar.collapsed h2 {
+    opacity: 0;
 }
 
 .sidebar a {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 10px;
     padding: 12px;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
     text-decoration: none;
     color: #cbd5e1;
-    border-radius: 8px;
+    border-radius: 10px;
     transition: 0.3s;
 }
 
 .sidebar a:hover {
     background: #1e293b;
     color: white;
+    transform: translateX(5px);
+    box-shadow: 0 0 10px rgba(59,130,246,0.5);
 }
 
-/* MAIN CONTENT */
+.toggle-btn {
+    position: absolute;
+    top: 20px;
+    right: -15px;
+    background: #3b82f6;
+    border: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    color: white;
+    font-weight: bold;
+}
+
+/* MAIN */
 .main {
-    margin-left: 250px;
+    margin-left: 260px;
     width: 100%;
     padding: 40px;
+    transition: 0.4s ease;
+}
+
+.main.collapsed {
+    margin-left: 80px;
 }
 
 .header {
@@ -71,6 +111,12 @@ body {
     background: #1e293b;
     padding: 20px;
     border-radius: 15px;
+    transition: 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.4);
 }
 
 .card h3 {
@@ -98,7 +144,7 @@ input {
     margin-top: 15px;
 }
 
-button {
+button.analyze-btn {
     margin-top: 15px;
     padding: 12px;
     width: 100%;
@@ -108,6 +154,11 @@ button {
     cursor: pointer;
     background: #3b82f6;
     color: white;
+    transition: 0.3s;
+}
+
+button.analyze-btn:hover {
+    background: #2563eb;
 }
 
 .progress-bar {
@@ -121,8 +172,8 @@ button {
 .progress-fill {
     height: 100%;
     width: {{ percentage if percentage else 0 }}%;
-    background: #22c55e;
-    transition: 0.5s ease;
+    background: linear-gradient(90deg, #22c55e, #16a34a);
+    transition: 0.6s ease;
 }
 
 .result-box {
@@ -136,29 +187,20 @@ button {
     background: #ef4444;
 }
 
-@media(max-width: 768px) {
-    .sidebar {
-        display: none;
-    }
-
-    .main {
-        margin-left: 0;
-    }
-}
 </style>
 </head>
 <body>
 
-<div class="sidebar">
+<div class="sidebar" id="sidebar">
+    <button class="toggle-btn" onclick="toggleSidebar()">≡</button>
     <h2>🔐 SecureVault</h2>
-    <a href="#">Dashboard</a>
-    <a href="#">Analytics</a>
-    <a href="#">Profile</a>
-    <a href="/logout" class="logout">Logout</a>
+    <a href="#">🏠 Dashboard</a>
+    <a href="#">📊 Analytics</a>
+    <a href="#">👤 Profile</a>
+    <a href="/logout" class="logout">🚪 Logout</a>
 </div>
 
-<div class="main">
-
+<div class="main" id="main">
     <div class="header">
         <h1>Welcome, {{ current_user.username }}</h1>
     </div>
@@ -185,7 +227,7 @@ button {
 
         <form method="POST">
             <input type="text" name="password" placeholder="Enter password to analyze..." required>
-            <button type="submit">Analyze Password</button>
+            <button type="submit" class="analyze-btn">Analyze Password</button>
         </form>
 
         {% if percentage %}
@@ -197,12 +239,18 @@ button {
             <p><strong>Strength:</strong> {{ strength }}</p>
             <p><strong>Score:</strong> {{ percentage }}%</p>
             <p><strong>Generated Strong Password:</strong></p>
-            <p id="generatedPassword">{{ generated_password }}</p>
+            <p>{{ generated_password }}</p>
         </div>
         {% endif %}
     </div>
-
 </div>
+
+<script>
+function toggleSidebar() {
+    document.getElementById("sidebar").classList.toggle("collapsed");
+    document.getElementById("main").classList.toggle("collapsed");
+}
+</script>
 
 </body>
 </html>
