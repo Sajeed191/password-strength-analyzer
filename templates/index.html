@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Cyber Password Analyzer</title>
+    <title>CyberShield Password Analyzer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <style>
         body {
             margin: 0;
-            font-family: Arial;
+            font-family: Arial, Helvetica, sans-serif;
             background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
             color: white;
             display: flex;
@@ -15,66 +17,83 @@
         }
 
         .container {
-            background: rgba(255,255,255,0.1);
-            padding: 30px;
-            border-radius: 15px;
             width: 400px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 0 20px rgba(0,255,255,0.5);
+            padding: 30px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(15px);
+            box-shadow: 0 0 25px rgba(0,255,255,0.6);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
         }
 
         input, select {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             margin-top: 10px;
-            border-radius: 8px;
+            border-radius: 10px;
             border: none;
+            outline: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 15px;
+            border-radius: 10px;
+            border: none;
+            background: cyan;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #00ffffaa;
         }
 
         .eye {
             cursor: pointer;
             margin-top: 5px;
             display: inline-block;
+            font-size: 14px;
         }
 
         .bar {
-            height: 15px;
-            background: grey;
-            border-radius: 10px;
-            margin-top: 10px;
+            height: 18px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 15px;
+            margin-top: 15px;
         }
 
         .fill {
             height: 100%;
             width: 0%;
-            border-radius: 10px;
-            transition: 0.5s;
+            border-radius: 15px;
+            transition: 0.5s ease-in-out;
         }
 
         .result {
             margin-top: 10px;
+            font-size: 14px;
         }
 
-        button {
-            width: 100%;
-            padding: 10px;
-            margin-top: 15px;
-            border-radius: 8px;
-            border: none;
-            background: cyan;
-            font-weight: bold;
-            cursor: pointer;
+        .glow {
+            text-shadow: 0 0 10px cyan;
         }
-
     </style>
 </head>
+
 <body>
 
 <div class="container">
-    <h2>Cyber Password Analyzer</h2>
+    <h2 class="glow">CyberShield Analyzer</h2>
 
-    <input type="password" id="password" placeholder="Enter Password">
-    <span class="eye" onclick="togglePassword()">👁 Show/Hide</span>
+    <input type="password" id="password" placeholder="Enter Your Password">
+    <span class="eye" onclick="togglePassword()">👁 Show / Hide</span>
 
     <select id="website">
         <option value="Amazon">Amazon</option>
@@ -84,24 +103,27 @@
         <option value="Facebook">Facebook</option>
     </select>
 
-    <button onclick="checkPassword()">Analyze</button>
+    <button onclick="checkPassword()">Analyze Password</button>
 
     <div class="bar">
         <div class="fill" id="strengthBar"></div>
     </div>
 
     <div class="result" id="level"></div>
-    <div class="result" id="similarity"></div>
+    <div class="result" id="breach"></div>
     <div class="result" id="suggestion"></div>
+
 </div>
 
 <script>
+
 function togglePassword() {
-    var x = document.getElementById("password");
-    x.type = x.type === "password" ? "text" : "password";
+    var input = document.getElementById("password");
+    input.type = input.type === "password" ? "text" : "password";
 }
 
 function checkPassword() {
+
     let password = document.getElementById("password").value;
     let website = document.getElementById("website").value;
 
@@ -110,23 +132,51 @@ function checkPassword() {
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({ password: password, website: website })
+        body: JSON.stringify({
+            password: password,
+            website: website
+        })
     })
     .then(response => response.json())
     .then(data => {
-        document.getElementById("strengthBar").style.width = data.strength + "%";
-        document.getElementById("strengthBar").style.background =
-            data.strength < 40 ? "red" :
-            data.strength < 60 ? "orange" :
-            data.strength < 80 ? "yellow" : "lime";
 
-        document.getElementById("level").innerHTML = "Strength: " + data.level + " (" + data.strength + "%)";
-        document.getElementById("similarity").innerHTML =
-            "Similar Password Usage on " + website + ": " + data.similarity + "%";
+        // Strength bar
+        let bar = document.getElementById("strengthBar");
+        bar.style.width = data.strength + "%";
+
+        if (data.strength < 40) {
+            bar.style.background = "red";
+        } else if (data.strength < 60) {
+            bar.style.background = "orange";
+        } else if (data.strength < 80) {
+            bar.style.background = "yellow";
+        } else {
+            bar.style.background = "lime";
+        }
+
+        document.getElementById("level").innerHTML =
+            "Strength Level: " + data.level + " (" + data.strength + "%)";
+
+        // Breach result
+        if (data.breach_count > 0) {
+            document.getElementById("breach").innerHTML =
+                "⚠ Found in data breaches " + data.breach_count + " times!";
+        } else {
+            document.getElementById("breach").innerHTML =
+                "✅ Not found in known data breaches.";
+        }
+
+        // Suggestion
         document.getElementById("suggestion").innerHTML =
-            "Suggested Strong Password: " + data.suggestion;
+            "💡 Suggested Strong Password: " + data.suggestion;
+
+    })
+    .catch(error => {
+        console.error("Error:", error);
     });
+
 }
+
 </script>
 
 </body>
