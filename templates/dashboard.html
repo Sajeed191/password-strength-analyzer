@@ -27,8 +27,15 @@ body {
     background: linear-gradient(180deg, #111827, #0f172a);
     padding: 30px 20px;
     position: fixed;
-    transition: 0.4s ease;
+    left: 0;
+    top: 0;
+    transition: transform 0.4s ease;
     animation: slideIn 0.6s ease forwards;
+    z-index: 1000;
+}
+
+.sidebar.hidden {
+    transform: translateX(-100%);
 }
 
 @keyframes slideIn {
@@ -36,23 +43,12 @@ body {
     to { transform: translateX(0); }
 }
 
-.sidebar.collapsed {
-    width: 80px;
-}
-
 .sidebar h2 {
     margin-bottom: 40px;
-    transition: 0.3s;
-}
-
-.sidebar.collapsed h2 {
-    opacity: 0;
 }
 
 .sidebar a {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    display: block;
     padding: 12px;
     margin-bottom: 12px;
     text-decoration: none;
@@ -65,9 +61,9 @@ body {
     background: #1e293b;
     color: white;
     transform: translateX(5px);
-    box-shadow: 0 0 10px rgba(59,130,246,0.5);
 }
 
+/* TOGGLE BUTTON */
 .toggle-btn {
     position: absolute;
     top: 20px;
@@ -82,21 +78,19 @@ body {
     font-weight: bold;
 }
 
-/* MAIN */
+/* MAIN CONTENT */
 .main {
     margin-left: 260px;
     width: 100%;
     padding: 40px;
-    transition: 0.4s ease;
+    transition: margin-left 0.4s ease;
 }
 
-.main.collapsed {
-    margin-left: 80px;
+.main.full {
+    margin-left: 0;
 }
 
 .header {
-    display: flex;
-    justify-content: space-between;
     margin-bottom: 30px;
 }
 
@@ -186,14 +180,15 @@ button.analyze-btn:hover {
 .logout {
     background: #ef4444;
 }
-
 </style>
 </head>
+
 <body>
 
 <div class="sidebar" id="sidebar">
-    <button class="toggle-btn" onclick="toggleSidebar()">≡</button>
+    <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
     <h2>🔐 SecureVault</h2>
+
     <a href="#">🏠 Dashboard</a>
     <a href="#">📊 Analytics</a>
     <a href="#">👤 Profile</a>
@@ -201,6 +196,7 @@ button.analyze-btn:hover {
 </div>
 
 <div class="main" id="main">
+
     <div class="header">
         <h1>Welcome, {{ current_user.username }}</h1>
     </div>
@@ -243,12 +239,16 @@ button.analyze-btn:hover {
         </div>
         {% endif %}
     </div>
+
 </div>
 
 <script>
 function toggleSidebar() {
-    document.getElementById("sidebar").classList.toggle("collapsed");
-    document.getElementById("main").classList.toggle("collapsed");
+    const sidebar = document.getElementById("sidebar");
+    const main = document.getElementById("main");
+
+    sidebar.classList.toggle("hidden");
+    main.classList.toggle("full");
 }
 </script>
 
