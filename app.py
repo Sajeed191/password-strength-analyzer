@@ -3,6 +3,9 @@ import re
 
 app = Flask(__name__)
 
+# -----------------------------
+# Password Strength Function
+# -----------------------------
 def check_strength(password):
     score = 0
 
@@ -24,18 +27,32 @@ def check_strength(password):
     else:
         return "Strong"
 
+
+# -----------------------------
+# Home Route
+# -----------------------------
 @app.route("/")
 def home():
     return render_template("index.html")
 
+
+# -----------------------------
+# Real-time Password Check API
+# -----------------------------
 @app.route("/check", methods=["POST"])
 def check():
     password = request.json["password"]
     result = check_strength(password)
+
+    # Save history to file
     with open("history.txt", "a") as file:
-    file.write(f"{password} - {result}\n")
+        file.write(f"{password} - {result}\n")
 
-return jsonify({"strength": result})
+    return jsonify({"strength": result})
 
+
+# -----------------------------
+# Run App
+# -----------------------------
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
