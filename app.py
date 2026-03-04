@@ -1,174 +1,104 @@
-import os
-import re
-import random
-import string
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-from werkzeug.security import generate_password_hash, check_password_hash
-
-# =========================
-# App Configuration
-# =========================
+from werkzeug.utils import secure_filename
+import os, random, string
 
 app = Flask(__name__)
-
-app.config['SECRET_KEY'] = os.getenv("SECRET_KEY", "fallback_secret_key")
-
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
-    "DATABASE_URL", "sqlite:///securevault.db"
-)
-
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = 'secret123'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+app.config['UPLOAD_FOLDER'] = 'static/uploads'
 
 db = SQLAlchemy(app)
-
-login_manager = LoginManager()
+login_manager = LoginManager(app)
 login_manager.login_view = "login"
-login_manager.init_app(app)
 
-# =========================
-# Database Model
-# =========================
+# ---------------- DATABASE ----------------
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(150), unique=True, nullable=False)
-    email = db.Column(db.String(200), unique=True, nullable=False)
-    password = db.Column(db.String(200), nullable=False)
+    username = db.Column(db.String(100))
+    password = db.Column(db.String(100))
+    email = db.Column(db.String(100))
+    profile_image = db.Column(db.String(200), default="default.png")
+
+class Analytics(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer)
+    strength = db.Column(db.String(50))
 
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# =========================
-# Password Strength Logic
-# =========================
+# --------------- PASSWORD LOGIC -------------
 
-def check_password_strength(password):
+def analyze_password(password):
     score = 0
+    if len(password) >= 8: score += 25
+    if any(c.isupper() for c in password): score += 25
+    if any(c.isdigit() for c in password): score += 25
+    if any(c in "!@#$%^&*" for c in password): score += 25
 
-    if len(password) >= 8:
-        score += 1
-    if re.search(r"[A-Z]", password):
-        score += 1
-    if re.search(r"[a-z]", password):
-        score += 1
-    if re.search(r"\d", password):
-        score += 1
-    if re.search(r"[!@#$%^&*(),.?\":{}|<>]", password):
-        score += 1
-
-    percentage = (score / 5) * 100
-
-    if percentage <= 40:
-        strength = "Poor"
-    elif percentage <= 60:
+    if score <= 25:
         strength = "Weak"
-    elif percentage <= 80:
-        strength = "Good"
+    elif score <= 75:
+        strength = "Medium"
     else:
-        strength = "Excellent"
+        strength = "Strong"
 
-    return percentage, strength
+    return score, strength
 
-# =========================
-# Password Generator
-# =========================
+# --------------- ROUTES ---------------------
 
-def generate_strong_password(base_password):
-    characters = string.ascii_letters + string.digits + string.punctuation
-    random_part = ''.join(random.choice(characters) for _ in range(6))
-    return base_password + random_part
-
-# =========================
-# Routes
-# =========================
-
-@app.route("/")
-def home():
-    return render_template("index.html")
-
-# -------- Register --------
-
-@app.route("/register", methods=["GET", "POST"])
-def register():
-    if request.method == "POST":
-        username = request.form.get("username")
-        email = request.form.get("email")
-        password = request.form.get("password")
-
-        hashed_password = generate_password_hash(password)
-
-        new_user = User(username=username, email=email, password=hashed_password)
-        db.session.add(new_user)
-        db.session.commit()
-
-        flash("Registration successful! Please login.", "success")
-        return redirect(url_for("login"))
-
-    return render_template("register.html")
-
-# -------- Login --------
-
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        email = request.form.get("email")
-        password = request.form.get("password")
-
-        user = User.query.filter_by(email=email).first()
-
-        if user and check_password_hash(user.password, password):
-            login_user(user)
-            return redirect(url_for("dashboard"))
-        else:
-            flash("Invalid credentials", "danger")
-
-    return render_template("login.html")
-
-# -------- Dashboard --------
-
-@app.route("/dashboard", methods=["GET", "POST"])
+@app.route("/dashboard", methods=["GET","POST"])
 @login_required
 def dashboard():
-    percentage = None
-    strength = None
-    generated_password = None
+    percentage = 0
+    strength = ""
 
     if request.method == "POST":
-        password = request.form.get("password")
+        password = request.form["password"]
+        percentage, strength = analyze_password(password)
 
-        percentage, strength = check_password_strength(password)
-        generated_password = generate_strong_password(password)
+        new_data = Analytics(user_id=current_user.id, strength=strength)
+        db.session.add(new_data)
+        db.session.commit()
 
-    return render_template(
-        "dashboard.html",
-        percentage=percentage,
-        strength=strength,
-        generated_password=generated_password
-    )
+    total = Analytics.query.filter_by(user_id=current_user.id).count()
+    strong = Analytics.query.filter_by(user_id=current_user.id, strength="Strong").count()
+    weak = Analytics.query.filter_by(user_id=current_user.id, strength="Weak").count()
 
-# -------- Logout --------
+    return render_template("dashboard.html",
+                           percentage=percentage,
+                           strength=strength,
+                           total=total,
+                           strong=strong,
+                           weak=weak)
+
+@app.route("/update_profile", methods=["POST"])
+@login_required
+def update_profile():
+    current_user.username = request.form["username"]
+    current_user.email = request.form["email"]
+
+    if "profile_image" in request.files:
+        file = request.files["profile_image"]
+        if file.filename != "":
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            current_user.profile_image = filename
+
+    db.session.commit()
+    return redirect(url_for("dashboard"))
 
 @app.route("/logout")
 @login_required
 def logout():
     logout_user()
-    flash("Logged out successfully.", "info")
-    return redirect(url_for("login"))
-
-# =========================
-# Create Database
-# =========================
-
-with app.app_context():
-    db.create_all()
-
-# =========================
-# Run App (Render Compatible)
-# =========================
+    return redirect("/login")
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+    with app.app_context():
+        db.create_all()
+    app.run(debug=True)
