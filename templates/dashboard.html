@@ -1,51 +1,146 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Dashboard - SecureVault</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <style>
         body {
-            font-family: Arial;
-            background: #141e30;
-            background: linear-gradient(to right, #243b55, #141e30);
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #1f1c2c, #928dab);
             color: white;
-            text-align: center;
-            padding-top: 50px;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px 40px;
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .navbar h2 {
+            margin: 0;
+        }
+
+        .logout-btn {
+            background: #ff4b5c;
+            border: none;
+            padding: 8px 15px;
+            color: white;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 60px auto;
+            background: rgba(255,255,255,0.1);
+            padding: 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
         }
 
         input {
-            padding: 10px;
-            width: 300px;
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            margin-top: 15px;
+            font-size: 16px;
         }
 
         button {
-            padding: 10px;
+            margin-top: 15px;
+            padding: 12px;
+            width: 100%;
+            border-radius: 10px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            background: #00c6ff;
+            color: white;
+            font-size: 16px;
         }
 
-        .result {
+        .progress-bar {
             margin-top: 20px;
+            height: 15px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: {{ percentage if percentage else 0 }}%;
+            background: #00ff99;
+            transition: 0.5s ease;
+        }
+
+        .result-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+        }
+
+        .copy-btn {
+            margin-top: 10px;
+            background: #00ff99;
+            color: black;
+        }
+
+        @media(max-width: 600px) {
+            .container {
+                margin: 30px;
+                padding: 25px;
+            }
         }
     </style>
 </head>
 <body>
 
-<h2>Welcome, {{ current_user.username }}</h2>
-
-<form method="POST">
-    <input type="text" name="password" placeholder="Enter password" required>
-    <button type="submit">Analyze</button>
-</form>
-
-{% if percentage %}
-<div class="result">
-    <p>Strength: {{ strength }}</p>
-    <p>Score: {{ percentage }}%</p>
-    <p>Generated Strong Password:</p>
-    <p><b>{{ generated_password }}</b></p>
+<div class="navbar">
+    <h2>🔐 SecureVault</h2>
+    <form action="/logout">
+        <button class="logout-btn">Logout</button>
+    </form>
 </div>
-{% endif %}
 
-<br>
-<a href="/logout">Logout</a>
+<div class="container">
+    <h3>Welcome, {{ current_user.username }}</h3>
+
+    <form method="POST">
+        <input type="text" name="password" placeholder="Enter password to analyze..." required>
+        <button type="submit">Analyze Password</button>
+    </form>
+
+    {% if percentage %}
+    <div class="progress-bar">
+        <div class="progress-fill"></div>
+    </div>
+
+    <div class="result-box">
+        <p><strong>Strength:</strong> {{ strength }}</p>
+        <p><strong>Score:</strong> {{ percentage }}%</p>
+        <p><strong>Generated Strong Password:</strong></p>
+        <p id="generatedPassword">{{ generated_password }}</p>
+        <button class="copy-btn" onclick="copyPassword()">Copy Password</button>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function copyPassword() {
+    const text = document.getElementById("generatedPassword").innerText;
+    navigator.clipboard.writeText(text);
+    alert("Password copied!");
+}
+</script>
 
 </body>
 </html>
