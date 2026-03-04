@@ -3,13 +3,13 @@ import re
 import hashlib
 import requests
 import sqlite3
-from datetime import datetime
 import random
 import string
+from datetime import datetime
 import os
 
 app = Flask(__name__)
-app.secret_key = "change_this_secret_key"
+app.secret_key = "super_secure_secret_key"
 
 # -------------------------
 # DATABASE SETUP
@@ -17,22 +17,24 @@ app.secret_key = "change_this_secret_key"
 def init_db():
     conn = sqlite3.connect("analytics.db")
     c = conn.cursor()
-    c.execute('''
+    c.execute("""
         CREATE TABLE IF NOT EXISTS analytics (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            website TEXT,
             strength INTEGER,
             level TEXT,
             breach_count INTEGER,
+            similarity INTEGER,
             timestamp TEXT
         )
-    ''')
+    """)
     conn.commit()
     conn.close()
 
 init_db()
 
 # -------------------------
-# PASSWORD STRENGTH CHECK
+# PASSWORD STRENGTH ENGINE
 # -------------------------
 def check_strength(password):
     score = 0
@@ -43,8 +45,18 @@ def check_strength(password):
     if re.search("[@#$%^&*!]", password): score += 20
     return score
 
+def get_level(score):
+    if score < 40:
+        return "Poor"
+    elif score < 60:
+        return "Weak"
+    elif score < 80:
+        return "Good"
+    else:
+        return "Excellent"
+
 # -------------------------
-# BREACH CHECK (HIBP API)
+# BREACH CHECK
 # -------------------------
 def check_breach(password):
     sha1 = hashlib.sha1(password.encode()).hexdigest().upper()
@@ -64,22 +76,23 @@ def check_breach(password):
     return 0
 
 # -------------------------
-# PASSWORD GENERATOR
+# PASSWORD SUGGESTION
 # -------------------------
-def generate_password():
-    chars = string.ascii_letters + string.digits + "@#$%^&*!"
-    return ''.join(random.choices(chars, k=16))
+def suggest_password(password):
+    extra = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+    return password + "@" + extra
 
 # -------------------------
 # SAVE ANALYTICS
 # -------------------------
-def save_to_db(strength, level, breach_count):
+def save_data(website, strength, level, breach_count, similarity):
     conn = sqlite3.connect("analytics.db")
     c = conn.cursor()
-    c.execute(
-        "INSERT INTO analytics (strength, level, breach_count, timestamp) VALUES (?, ?, ?, ?)",
-        (strength, level, breach_count, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-    )
+    c.execute("""
+        INSERT INTO analytics (website, strength, level, breach_count, similarity, timestamp)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (website, strength, level, breach_count, similarity,
+          datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
     conn.commit()
     conn.close()
 
@@ -93,31 +106,27 @@ def home():
 @app.route("/check", methods=["POST"])
 def check():
     data = request.json
-    password = data.get("password", "")
+    password = data.get("password")
+    website = data.get("website")
 
     strength = check_strength(password)
+    level = get_level(strength)
     breach_count = check_breach(password)
 
-    if strength < 40:
-        level = "Poor"
-    elif strength < 60:
-        level = "Weak"
-    elif strength < 80:
-        level = "Good"
-    else:
-        level = "Excellent"
+    # Simulated similarity percentage
+    similarity = random.randint(5, 75)
 
-    save_to_db(strength, level, breach_count)
+    suggestion = suggest_password(password)
+
+    save_data(website, strength, level, breach_count, similarity)
 
     return jsonify({
         "strength": strength,
         "level": level,
-        "breach_count": breach_count
+        "breach_count": breach_count,
+        "similarity": similarity,
+        "suggestion": suggestion
     })
-
-@app.route("/generate")
-def generate():
-    return jsonify({"password": generate_password()})
 
 # -------------------------
 # ADMIN LOGIN
@@ -125,14 +134,10 @@ def generate():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
-
-        if username == "admin" and password == "admin123":
+        if request.form["username"] == "admin" and request.form["password"] == "admin123":
             session["admin"] = True
             return redirect("/dashboard")
-        else:
-            return "Invalid Credentials"
+        return "Invalid Credentials"
 
     return render_template("login.html")
 
@@ -156,11 +161,11 @@ def dashboard():
     conn.close()
 
     return f"""
-    <h2>Admin Dashboard</h2>
+    <h2>CyberShield Admin Dashboard</h2>
     <p>Total Checks: {total}</p>
     <p>Weak Passwords: {weak}</p>
     <p>Breached Passwords: {breached}</p>
-    <br><a href="/logout">Logout</a>
+    <br><a href='/logout'>Logout</a>
     """
 
 @app.route("/logout")
