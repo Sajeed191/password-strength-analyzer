@@ -1,29 +1,46 @@
+import os
 from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.middleware.proxy_fix import ProxyFix
-import os
 
 app = Flask(__name__)
 
-# ================= SECURITY CONFIG =================
+# =========================
+# SECURITY CONFIG
+# =========================
 
-app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY", "supersecretkey123")
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "local-secret-key")
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# Handle Render PostgreSQL properly
+database_url = os.environ.get("DATABASE_URL")
 
-# Fix for Render HTTPS proxy (VERY IMPORTANT)
+if database_url:
+    if database_url.startswith("postgres://"):
+        database_url = database_url.replace("postgres://", "postgresql://", 1)
+    app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+else:
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db"
+
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+# Fix HTTPS Proxy issue on Render
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
-# ================= DATABASE =================
+# =========================
+# DATABASE SETUP
+# =========================
 
 db = SQLAlchemy(app)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
+
+# =========================
+# USER MODEL
+# =========================
 
 class User(UserMixin, db.Model):
     __tablename__ = "user"
@@ -35,26 +52,34 @@ class User(UserMixin, db.Model):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Create tables automatically (for Render)
+# 🔥 VERY IMPORTANT (creates tables on Render automatically)
 with app.app_context():
     db.create_all()
 
-# ================= ROUTES =================
+# =========================
+# ROUTES
+# =========================
 
 @app.route("/")
 def home():
     return redirect(url_for("login"))
 
+# REGISTER
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
-        username = request.form["username"]
-        password = generate_password_hash(request.form["password"])
+        username = request.form.get("username")
+        password = request.form.get("password")
+
+        if not username or not password:
+            return "All fields are required"
 
         if User.query.filter_by(username=username).first():
             return "User already exists"
 
-        new_user = User(username=username, password=password)
+        hashed_password = generate_password_hash(password)
+
+        new_user = User(username=username, password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
 
@@ -62,11 +87,12 @@ def register():
 
     return render_template("register.html")
 
+# LOGIN
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
+        username = request.form.get("username")
+        password = request.form.get("password")
 
         user = User.query.filter_by(username=username).first()
 
@@ -74,20 +100,25 @@ def login():
             login_user(user)
             return redirect(url_for("dashboard"))
 
-        return "Invalid credentials"
+        return "Invalid username or password"
 
     return render_template("login.html")
 
+# DASHBOARD
 @app.route("/dashboard")
 @login_required
 def dashboard():
     return render_template("dashboard.html", username=current_user.username)
 
+# LOGOUT
 @app.route("/logout")
 @login_required
 def logout():
     logout_user()
     return redirect(url_for("login"))
 
+# =========================
+# RUN LOCAL ONLY
+# =========================
 if __name__ == "__main__":
     app.run(debug=True)
