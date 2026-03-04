@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>SecureVault Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body{
+margin:0;
+font-family:'Segoe UI',sans-serif;
+background:#f4f6f9;
+display:flex;
+height:100vh;
+}
+
+.sidebar{
+width:230px;
+background:#111827;
+color:white;
+padding:20px;
+}
+
+.main{
+flex:1;
+padding:30px;
+overflow-y:auto;
+}
+
+.card{
+background:white;
+padding:20px;
+border-radius:8px;
+box-shadow:0 4px 12px rgba(0,0,0,0.05);
+margin-bottom:20px;
+}
+
+.progress{
+height:10px;
+background:#e5e7eb;
+border-radius:5px;
+overflow:hidden;
+}
+
+.progress-bar{
+height:100%;
+width:0%;
+transition:0.4s;
+}
+
+button{
+padding:8px 14px;
+background:#2563eb;
+color:white;
+border:none;
+border-radius:6px;
+cursor:pointer;
+}
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+<h2>SecureVault</h2>
+<p>Password Analyzer</p>
+<p>Password Generator</p>
+</div>
+
+<div class="main">
+
+<div class="card">
+<h3>Password Analyzer</h3>
+<input type="password" id="password" placeholder="Enter password">
+<div class="progress">
+<div class="progress-bar" id="progress-bar"></div>
+</div>
+<p id="risk"></p>
+<p id="entropy"></p>
+</div>
+
+<div class="card">
+<h3>Password Generator</h3>
+Length:
+<input type="number" id="length" value="12">
+<button onclick="generatePassword()">Generate</button>
+<p id="generated"></p>
+</div>
+
+</div>
+
+<script>
+document.getElementById("password").addEventListener("input",()=>{
+fetch("/analyze",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({password:document.getElementById("password").value})
+})
+.then(res=>res.json())
+.then(data=>{
+document.getElementById("progress-bar").style.width=data.strength+"%";
+document.getElementById("risk").innerHTML="Risk: "+data.risk;
+document.getElementById("entropy").innerHTML="Entropy: "+data.entropy;
+});
+});
+
+function generatePassword(){
+fetch("/generate",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({length:document.getElementById("length").value})
+})
+.then(res=>res.json())
+.then(data=>{
+document.getElementById("generated").innerHTML=data.password;
+});
+}
+</script>
+
+</body>
+</html>
