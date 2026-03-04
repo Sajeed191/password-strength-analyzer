@@ -4,15 +4,33 @@ import random
 import string
 import hashlib
 import requests
+import sqlite3
+from datetime import datetime
 
 app = Flask(__name__)
 
-# Simple analytics counter
-total_checks = 0
-weak_passwords = 0
+# -----------------------
+# DATABASE SETUP
+# -----------------------
+def init_db():
+    conn = sqlite3.connect("analytics.db")
+    c = conn.cursor()
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS analytics (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            strength INTEGER,
+            level TEXT,
+            breach_count INTEGER,
+            timestamp TEXT
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+init_db()
 
 # -----------------------
-# PASSWORD STRENGTH CHECK
+# PASSWORD STRENGTH
 # -----------------------
 def check_strength(password):
     score = 0
@@ -54,11 +72,15 @@ def check_breach(password):
 
 
 # -----------------------
-# AI PASSWORD GENERATOR
+# SAVE ANALYTICS
 # -----------------------
-def generate_ultra_password():
-    chars = string.ascii_letters + string.digits + "@#$%^&*!"
-    return ''.join(random.choices(chars, k=16))
+def save_to_db(strength, level, breach_count):
+    conn = sqlite3.connect("analytics.db")
+    c = conn.cursor()
+    c.execute("INSERT INTO analytics (strength, level, breach_count, timestamp) VALUES (?, ?, ?, ?)",
+              (strength, level, breach_count, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+    conn.commit()
+    conn.close()
 
 
 @app.route("/")
@@ -68,18 +90,11 @@ def home():
 
 @app.route("/check", methods=["POST"])
 def check():
-    global total_checks, weak_passwords
-
-    total_checks += 1
-
     data = request.json
     password = data.get("password", "")
 
     strength = check_strength(password)
     breach_count = check_breach(password)
-
-    if strength < 60:
-        weak_passwords += 1
 
     if strength < 40:
         level = "Poor"
@@ -90,20 +105,37 @@ def check():
     else:
         level = "Excellent"
 
+    save_to_db(strength, level, breach_count)
+
     return jsonify({
         "strength": strength,
         "level": level,
-        "breach_count": breach_count,
-        "total_checks": total_checks,
-        "weak_passwords": weak_passwords
+        "breach_count": breach_count
     })
 
 
-@app.route("/generate", methods=["GET"])
-def generate():
-    return jsonify({
-        "password": generate_ultra_password()
-    })
+@app.route("/admin")
+def admin():
+    conn = sqlite3.connect("analytics.db")
+    c = conn.cursor()
+
+    c.execute("SELECT COUNT(*) FROM analytics")
+    total = c.fetchone()[0]
+
+    c.execute("SELECT COUNT(*) FROM analytics WHERE level='Weak' OR level='Poor'")
+    weak = c.fetchone()[0]
+
+    c.execute("SELECT COUNT(*) FROM analytics WHERE breach_count > 0")
+    breached = c.fetchone()[0]
+
+    conn.close()
+
+    return f"""
+    <h2>Admin Dashboard</h2>
+    <p>Total Checks: {total}</p>
+    <p>Weak Passwords: {weak}</p>
+    <p>Breached Passwords: {breached}</p>
+    """
 
 
 if __name__ == "__main__":
