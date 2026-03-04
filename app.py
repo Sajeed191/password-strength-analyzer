@@ -8,35 +8,22 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 app = Flask(__name__)
 
 # =========================
-# SECURITY CONFIG
+# CONFIG
 # =========================
 
-app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "local-secret-key")
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "super-secret-key")
 
-# Fix HTTPS proxy issue on Render
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
-
-# =========================
-# DATABASE CONFIG (CRASH-SAFE)
-# =========================
 
 database_url = os.environ.get("DATABASE_URL")
 
-try:
-    if database_url and database_url.startswith(("postgres://", "postgresql://")):
-        database_url = database_url.replace("postgres://", "postgresql://", 1)
-        app.config["SQLALCHEMY_DATABASE_URI"] = database_url
-    else:
-        raise ValueError("Invalid or missing DATABASE_URL")
-except:
-    # fallback to SQLite if anything is wrong
+if database_url and database_url.startswith(("postgres://", "postgresql://")):
+    database_url = database_url.replace("postgres://", "postgresql://", 1)
+    app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+else:
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db"
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
-# =========================
-# DATABASE INIT
-# =========================
 
 db = SQLAlchemy(app)
 
@@ -45,11 +32,10 @@ login_manager.init_app(app)
 login_manager.login_view = "login"
 
 # =========================
-# USER MODEL
+# MODEL
 # =========================
 
 class User(UserMixin, db.Model):
-    __tablename__ = "user"
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
@@ -58,7 +44,6 @@ class User(UserMixin, db.Model):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Create tables automatically (important for Render)
 with app.app_context():
     db.create_all()
 
@@ -74,11 +59,11 @@ def home():
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
+        username = request.form.get("username", "").strip().lower()
+        password = request.form.get("password", "").strip()
 
         if not username or not password:
-            return "All fields are required"
+            return "All fields required"
 
         if User.query.filter_by(username=username).first():
             return "User already exists"
@@ -89,6 +74,8 @@ def register():
         db.session.add(new_user)
         db.session.commit()
 
+        print("User registered:", username)
+
         return redirect(url_for("login"))
 
     return render_template("register.html")
@@ -97,15 +84,25 @@ def register():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
+        username = request.form.get("username", "").strip().lower()
+        password = request.form.get("password", "").strip()
+
+        print("Login attempt:", username)
 
         user = User.query.filter_by(username=username).first()
 
+        if user:
+            print("User found")
+            print("Stored hash:", user.password)
+        else:
+            print("User not found")
+
         if user and check_password_hash(user.password, password):
             login_user(user)
+            print("Login success")
             return redirect(url_for("dashboard"))
 
+        print("Login failed")
         return "Invalid username or password"
 
     return render_template("login.html")
@@ -123,8 +120,5 @@ def logout():
     logout_user()
     return redirect(url_for("login"))
 
-# =========================
-# LOCAL RUN
-# =========================
 if __name__ == "__main__":
     app.run(debug=True)
