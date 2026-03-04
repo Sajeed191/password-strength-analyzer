@@ -4,13 +4,16 @@ import hashlib
 import requests
 import sqlite3
 from datetime import datetime
+import random
+import string
+import os
 
 app = Flask(__name__)
-app.secret_key = "supersecretkey123"   # Change later for production
+app.secret_key = "change_this_secret_key"
 
-# -----------------------
+# -------------------------
 # DATABASE SETUP
-# -----------------------
+# -------------------------
 def init_db():
     conn = sqlite3.connect("analytics.db")
     c = conn.cursor()
@@ -28,9 +31,9 @@ def init_db():
 
 init_db()
 
-# -----------------------
-# PASSWORD STRENGTH
-# -----------------------
+# -------------------------
+# PASSWORD STRENGTH CHECK
+# -------------------------
 def check_strength(password):
     score = 0
     if len(password) >= 8: score += 20
@@ -40,13 +43,14 @@ def check_strength(password):
     if re.search("[@#$%^&*!]", password): score += 20
     return score
 
-# -----------------------
-# BREACH CHECK
-# -----------------------
+# -------------------------
+# BREACH CHECK (HIBP API)
+# -------------------------
 def check_breach(password):
-    sha1_password = hashlib.sha1(password.encode()).hexdigest().upper()
-    prefix = sha1_password[:5]
-    suffix = sha1_password[5:]
+    sha1 = hashlib.sha1(password.encode()).hexdigest().upper()
+    prefix = sha1[:5]
+    suffix = sha1[5:]
+
     url = f"https://api.pwnedpasswords.com/range/{prefix}"
     response = requests.get(url)
 
@@ -59,9 +63,16 @@ def check_breach(password):
             return int(count)
     return 0
 
-# -----------------------
+# -------------------------
+# PASSWORD GENERATOR
+# -------------------------
+def generate_password():
+    chars = string.ascii_letters + string.digits + "@#$%^&*!"
+    return ''.join(random.choices(chars, k=16))
+
+# -------------------------
 # SAVE ANALYTICS
-# -----------------------
+# -------------------------
 def save_to_db(strength, level, breach_count):
     conn = sqlite3.connect("analytics.db")
     c = conn.cursor()
@@ -72,9 +83,9 @@ def save_to_db(strength, level, breach_count):
     conn.commit()
     conn.close()
 
-# -----------------------
+# -------------------------
 # ROUTES
-# -----------------------
+# -------------------------
 @app.route("/")
 def home():
     return render_template("index.html")
@@ -104,30 +115,26 @@ def check():
         "breach_count": breach_count
     })
 
-# -----------------------
+@app.route("/generate")
+def generate():
+    return jsonify({"password": generate_password()})
+
+# -------------------------
 # ADMIN LOGIN
-# -----------------------
+# -------------------------
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
 
-        # CHANGE THESE CREDENTIALS
         if username == "admin" and password == "admin123":
             session["admin"] = True
             return redirect("/dashboard")
         else:
-            return "Invalid credentials"
+            return "Invalid Credentials"
 
-    return """
-    <h2>Admin Login</h2>
-    <form method="POST">
-        <input name="username" placeholder="Username"><br><br>
-        <input name="password" type="password" placeholder="Password"><br><br>
-        <button type="submit">Login</button>
-    </form>
-    """
+    return render_template("login.html")
 
 @app.route("/dashboard")
 def dashboard():
@@ -153,8 +160,7 @@ def dashboard():
     <p>Total Checks: {total}</p>
     <p>Weak Passwords: {weak}</p>
     <p>Breached Passwords: {breached}</p>
-    <br>
-    <a href="/logout">Logout</a>
+    <br><a href="/logout">Logout</a>
     """
 
 @app.route("/logout")
@@ -163,4 +169,5 @@ def logout():
     return redirect("/login")
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
