@@ -1,1 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register - SecureVault</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #0f2027;
+            background: linear-gradient(to right, #203a43, #2c5364);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: white;
+        }
 
+        .card {
+            background: rgba(255,255,255,0.1);
+            padding: 40px;
+            border-radius: 15px;
+            width: 350px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background: #00ff99;
+            color: black;
+            font-weight: bold;
+        }
+
+        a {
+            color: #00ff99;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Register</h2>
+
+    <form method="POST">
+        <input type="text" name="username" placeholder="Username" required>
+        <input type="email" name="email" placeholder="Email" required>
+        <input type="password" name="password" placeholder="Password" required>
+        <button type="submit">Register</button>
+    </form>
+
+    <p>Already have an account? <a href="/login">Login</a></p>
+</div>
+
+</body>
+</html>
