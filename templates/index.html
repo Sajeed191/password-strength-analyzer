@@ -10,83 +10,29 @@ body {
     font-family: Arial;
     background: #0f2027;
     color: white;
-    transition: 0.4s;
-}
-
-.light-mode {
-    background: #f4f4f4;
-    color: black;
-}
-
-.container {
-    max-width: 500px;
-    margin: auto;
-    padding: 20px;
     text-align: center;
+    padding: 20px;
 }
-
-input {
-    width: 100%;
-    padding: 12px;
-    border-radius: 8px;
-    border: none;
-    margin-top: 10px;
-}
-
-button {
-    width: 100%;
-    padding: 12px;
+input, button {
+    padding: 10px;
+    width: 90%;
+    max-width: 400px;
     margin-top: 10px;
     border-radius: 8px;
     border: none;
-    cursor: pointer;
-    font-weight: bold;
 }
-
-.analyze { background: cyan; }
-.generate { background: limegreen; }
-
-.bar {
-    height: 20px;
-    background: gray;
-    border-radius: 10px;
-    margin-top: 15px;
-}
-
-.fill {
-    height: 100%;
-    width: 0%;
-    border-radius: 10px;
-    transition: 0.5s;
-}
-
-.spinner {
-    display: none;
-    margin-top: 10px;
-}
-
-.toggle-mode {
-    margin-top: 10px;
-    cursor: pointer;
-}
-
-.stats {
-    margin-top: 20px;
-    font-size: 14px;
-}
+button { cursor: pointer; font-weight: bold; }
+.bar { height: 20px; background: gray; border-radius: 10px; margin: 15px auto; max-width: 400px; }
+.fill { height: 100%; width: 0%; border-radius: 10px; transition: 0.5s; }
 </style>
 </head>
-
 <body>
 
-<div class="container">
 <h2>CyberShield Pro 🔐</h2>
 
 <input type="password" id="password" placeholder="Enter Password">
-<button class="analyze" onclick="checkPassword()">Analyze</button>
-<button class="generate" onclick="generatePassword()">Generate Ultra Password</button>
-
-<div class="spinner" id="spinner">Checking...</div>
+<button onclick="checkPassword()">Analyze</button>
+<button onclick="generatePassword()">Generate Strong Password</button>
 
 <div class="bar">
     <div class="fill" id="strengthBar"></div>
@@ -95,26 +41,9 @@ button {
 <div id="result"></div>
 <div id="breach"></div>
 
-<div class="stats">
-Total Checks: <span id="total">0</span><br>
-Weak Passwords: <span id="weak">0</span>
-</div>
-
-<div class="toggle-mode" onclick="toggleMode()">🌗 Toggle Dark/Light Mode</div>
-
-</div>
-
 <script>
-
-function toggleMode(){
-    document.body.classList.toggle("light-mode");
-}
-
 function checkPassword(){
-
     let password = document.getElementById("password").value;
-
-    document.getElementById("spinner").style.display = "block";
 
     fetch("/check", {
         method: "POST",
@@ -123,12 +52,8 @@ function checkPassword(){
     })
     .then(res => res.json())
     .then(data => {
-
-        document.getElementById("spinner").style.display = "none";
-
         let bar = document.getElementById("strengthBar");
         bar.style.width = data.strength + "%";
-
         bar.style.background =
             data.strength < 40 ? "red" :
             data.strength < 60 ? "orange" :
@@ -141,9 +66,6 @@ function checkPassword(){
             data.breach_count > 0 ?
             "⚠ Found in breaches " + data.breach_count + " times" :
             "✅ Not found in breaches";
-
-        document.getElementById("total").innerHTML = data.total_checks;
-        document.getElementById("weak").innerHTML = data.weak_passwords;
     });
 }
 
@@ -154,7 +76,6 @@ function generatePassword(){
         document.getElementById("password").value = data.password;
     });
 }
-
 </script>
 
 </body>
