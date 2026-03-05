@@ -1,0 +1,21 @@
+body{
+font-family:Arial;
+background:#0f172a;
+color:white;
+text-align:center;
+}
+
+input{
+padding:10px;
+margin:10px;
+border-radius:8px;
+border:none;
+}
+
+button{
+padding:10px 20px;
+background:#3b82f6;
+color:white;
+border:none;
+border-radius:8px;
+}
