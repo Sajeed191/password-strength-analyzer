@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html>
-
 <head>
+
 <title>Password Analyzer</title>
-<link rel="stylesheet" href="/static/style.css">
+
+<link rel="stylesheet" href="/static/css/style.css">
+
 </head>
 
 <body>
@@ -14,7 +16,11 @@
 
 <form action="/analyze" method="POST">
 
-<input type="password" name="password" placeholder="Enter Password" required>
+<input type="password" id="password" name="password" placeholder="Enter Password" required>
+
+<div id="strength-bar"></div>
+
+<p id="strength-text"></p>
 
 <button type="submit">Analyze</button>
 
@@ -25,6 +31,8 @@
 <a href="/logout">Logout</a>
 
 </div>
+
+<script src="/static/js/strength.js"></script>
 
 </body>
 
