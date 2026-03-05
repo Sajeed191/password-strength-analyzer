@@ -2,20 +2,15 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
-import os
 import re
 
 app = Flask(__name__)
 
 app.config['SECRET_KEY'] = 'secretkey'
 
-# DATABASE PATH (important because you use instance folder)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///instance/user.db'
+# DATABASE (simple location)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///user.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-# ensure instance folder exists
-if not os.path.exists("instance"):
-    os.makedirs("instance")
 
 db = SQLAlchemy(app)
 
@@ -76,7 +71,7 @@ def check_password_strength(password):
 
 
 # ======================
-# HOME PAGE
+# HOME
 # ======================
 
 @app.route("/")
@@ -86,7 +81,7 @@ def home():
 
 
 # ======================
-# ANALYZE PASSWORD
+# ANALYZE
 # ======================
 
 @app.route("/analyze", methods=["POST"])
@@ -112,13 +107,9 @@ def register():
         username = request.form.get("username")
         password = request.form.get("password")
 
-        if not username or not password:
-            flash("Please fill all fields")
-            return redirect(url_for("register"))
+        user = User.query.filter_by(username=username).first()
 
-        existing_user = User.query.filter_by(username=username).first()
-
-        if existing_user:
+        if user:
             flash("Username already exists")
             return redirect(url_for("register"))
 
@@ -132,7 +123,7 @@ def register():
         db.session.add(new_user)
         db.session.commit()
 
-        flash("Account created successfully")
+        flash("Registration successful")
 
         return redirect(url_for("login"))
 
@@ -180,7 +171,7 @@ def logout():
 
 
 # ======================
-# RUN APP
+# RUN
 # ======================
 
 if __name__ == "__main__":
