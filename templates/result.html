@@ -2,17 +2,22 @@
 <html>
 
 <head>
+
 <title>Result</title>
-<link rel="stylesheet" href="/static/style.css">
+
+<link rel="stylesheet" href="/static/css/style.css">
+
 </head>
 
 <body>
 
 <div class="container">
 
-<h1>Password Strength</h1>
+<h1>Password Analysis</h1>
 
-<h2>{{ strength }}</h2>
+<h2>Strength: {{ strength }}</h2>
+
+<h3>Entropy: {{ entropy }} bits</h3>
 
 <a href="/">Check Another Password</a>
 
