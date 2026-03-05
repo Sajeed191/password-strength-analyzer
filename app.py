@@ -3,12 +3,14 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
 import re
+import math
 
 app = Flask(__name__)
 
+# Secret key for sessions
 app.config['SECRET_KEY'] = 'secretkey'
 
-# DATABASE (simple location)
+# Database configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///user.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -19,9 +21,9 @@ login_manager.init_app(app)
 login_manager.login_view = "login"
 
 
-# ======================
+# =========================
 # DATABASE MODEL
-# ======================
+# =========================
 
 class User(UserMixin, db.Model):
 
@@ -34,12 +36,13 @@ class User(UserMixin, db.Model):
 
 @login_manager.user_loader
 def load_user(user_id):
+
     return db.session.get(User, int(user_id))
 
 
-# ======================
-# PASSWORD STRENGTH
-# ======================
+# =========================
+# PASSWORD STRENGTH CHECK
+# =========================
 
 def check_password_strength(password):
 
@@ -70,19 +73,48 @@ def check_password_strength(password):
         return "Very Strong"
 
 
-# ======================
-# HOME
-# ======================
+# =========================
+# PASSWORD ENTROPY
+# =========================
+
+def password_entropy(password):
+
+    charset = 0
+
+    if re.search("[a-z]", password):
+        charset += 26
+
+    if re.search("[A-Z]", password):
+        charset += 26
+
+    if re.search("[0-9]", password):
+        charset += 10
+
+    if re.search("[@#$%^&*!]", password):
+        charset += 32
+
+    if charset == 0:
+        return 0
+
+    entropy = len(password) * math.log2(charset)
+
+    return round(entropy, 2)
+
+
+# =========================
+# HOME PAGE
+# =========================
 
 @app.route("/")
 @login_required
 def home():
+
     return render_template("index.html")
 
 
-# ======================
-# ANALYZE
-# ======================
+# =========================
+# ANALYZE PASSWORD
+# =========================
 
 @app.route("/analyze", methods=["POST"])
 @login_required
@@ -92,12 +124,18 @@ def analyze():
 
     strength = check_password_strength(password)
 
-    return render_template("result.html", strength=strength)
+    entropy = password_entropy(password)
+
+    return render_template(
+        "result.html",
+        strength=strength,
+        entropy=entropy
+    )
 
 
-# ======================
+# =========================
 # REGISTER
-# ======================
+# =========================
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -107,9 +145,13 @@ def register():
         username = request.form.get("username")
         password = request.form.get("password")
 
-        user = User.query.filter_by(username=username).first()
+        if not username or not password:
+            flash("Please fill all fields")
+            return redirect(url_for("register"))
 
-        if user:
+        existing_user = User.query.filter_by(username=username).first()
+
+        if existing_user:
             flash("Username already exists")
             return redirect(url_for("register"))
 
@@ -130,9 +172,9 @@ def register():
     return render_template("register.html")
 
 
-# ======================
+# =========================
 # LOGIN
-# ======================
+# =========================
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -157,9 +199,9 @@ def login():
     return render_template("login.html")
 
 
-# ======================
+# =========================
 # LOGOUT
-# ======================
+# =========================
 
 @app.route("/logout")
 @login_required
@@ -170,9 +212,9 @@ def logout():
     return redirect(url_for("login"))
 
 
-# ======================
-# RUN
-# ======================
+# =========================
+# RUN APP
+# =========================
 
 if __name__ == "__main__":
 
