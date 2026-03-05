@@ -1,56 +1,16 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-
 <title>Dashboard</title>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<link rel="stylesheet" href="/static/css/style.css">
-
 </head>
 
 <body>
 
 <h1>Dashboard</h1>
 
-<form method="POST">
+<p>You are logged in.</p>
 
-<input type="text" name="password" placeholder="Enter password">
-
-<button type="submit">Analyze</button>
-
-</form>
-
-<h2>Strength: {{strength}}</h2>
-
-<h2>Score: {{percentage}}%</h2>
-
-<h3>Suggested Password: {{suggestion}}</h3>
-
-<canvas id="chart"></canvas>
-
-<script>
-
-var ctx=document.getElementById('chart');
-
-new Chart(ctx,{
-
-type:'doughnut',
-
-data:{
-labels:["Strong","Medium","Weak"],
-datasets:[{
-data:[{{strong}},{{medium}},{{weak}}],
-backgroundColor:["green","orange","red"]
-}]
-}
-
-});
-
-</script>
-
-<a href="/profile">Profile</a>
 <a href="/logout">Logout</a>
 
 </body>
