@@ -1,17 +1,115 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-<title>Dashboard</title>
+    <title>Dashboard</title>
+
+    <style>
+
+        body{
+            font-family: Arial;
+            background:#f4f6f9;
+            margin:0;
+        }
+
+        .navbar{
+            background:#222;
+            color:white;
+            padding:15px;
+            display:flex;
+            justify-content:space-between;
+        }
+
+        .container{
+            width:80%;
+            margin:auto;
+            margin-top:40px;
+        }
+
+        .card{
+            background:white;
+            padding:20px;
+            border-radius:10px;
+            margin-bottom:20px;
+            box-shadow:0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        table{
+            width:100%;
+            border-collapse:collapse;
+        }
+
+        th,td{
+            padding:12px;
+            border-bottom:1px solid #ddd;
+            text-align:left;
+        }
+
+        th{
+            background:#f2f2f2;
+        }
+
+        .logout{
+            color:white;
+            text-decoration:none;
+            background:red;
+            padding:8px 12px;
+            border-radius:5px;
+        }
+
+    </style>
+
 </head>
 
 <body>
 
-<h1>Dashboard</h1>
+<div class="navbar">
 
-<p>You are logged in.</p>
+    <div>
+        <strong>Password Strength Analyzer</strong>
+    </div>
 
-<a href="/logout">Logout</a>
+    <div>
+        Welcome {{ current_user.username }}
+        <a class="logout" href="/logout">Logout</a>
+    </div>
+
+</div>
+
+
+<div class="container">
+
+    <div class="card">
+        <h2>Dashboard</h2>
+        <p>Total Registered Users: <strong>{{ total_users }}</strong></p>
+    </div>
+
+    <div class="card">
+
+        <h3>Registered Users</h3>
+
+        <table>
+
+            <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Email</th>
+            </tr>
+
+            {% for user in users %}
+
+            <tr>
+                <td>{{ user.id }}</td>
+                <td>{{ user.username }}</td>
+                <td>{{ user.email }}</td>
+            </tr>
+
+            {% endfor %}
+
+        </table>
+
+    </div>
+
+</div>
 
 </body>
 </html>
