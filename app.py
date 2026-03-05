@@ -6,7 +6,7 @@ import re
 
 app = Flask(__name__)
 
-app.config['SECRET_KEY'] = 'cybersecretkey'
+app.config['SECRET_KEY'] = 'secret123'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -17,9 +17,9 @@ login_manager.init_app(app)
 login_manager.login_view = "login"
 
 
-# --------------------
+# -----------------------
 # Database Model
-# --------------------
+# -----------------------
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -32,9 +32,9 @@ def load_user(user_id):
     return db.session.get(User, int(user_id))
 
 
-# --------------------
-# Password Strength
-# --------------------
+# -----------------------
+# Password Strength Logic
+# -----------------------
 
 def check_password_strength(password):
 
@@ -62,11 +62,12 @@ def check_password_strength(password):
         return "Very Strong"
 
 
-# --------------------
+# -----------------------
 # Routes
-# --------------------
+# -----------------------
 
 @app.route("/")
+@login_required
 def home():
     return render_template("index.html")
 
@@ -76,9 +77,9 @@ def home():
 def analyze():
 
     password = request.form["password"]
-    result = check_password_strength(password)
+    strength = check_password_strength(password)
 
-    return render_template("result.html", strength=result)
+    return render_template("result.html", strength=strength)
 
 
 @app.route("/register", methods=["GET","POST"])
@@ -91,12 +92,13 @@ def register():
 
         hashed_password = generate_password_hash(password)
 
-        user = User(username=username, password=hashed_password)
+        new_user = User(username=username, password=hashed_password)
 
-        db.session.add(user)
+        db.session.add(new_user)
         db.session.commit()
 
-        flash("Account created successfully")
+        flash("Account created successfully!")
+
         return redirect(url_for("login"))
 
     return render_template("register.html")
@@ -115,6 +117,7 @@ def login():
         if user and check_password_hash(user.password, password):
 
             login_user(user)
+
             return redirect(url_for("home"))
 
         else:
@@ -126,11 +129,13 @@ def login():
 @app.route("/logout")
 @login_required
 def logout():
+
     logout_user()
+
     return redirect(url_for("login"))
 
 
-# --------------------
+# -----------------------
 
 if __name__ == "__main__":
 
