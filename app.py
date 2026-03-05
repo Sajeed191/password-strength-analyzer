@@ -1,24 +1,17 @@
 from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from werkzeug.utils import secure_filename
 import os
-import random
-import string
 
 app = Flask(__name__)
 
-app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY","secret")
+# Secret key
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "devsecret")
 
-DATABASE_URL = os.environ.get("DATABASE_URL")
+# IMPORTANT: writable directory for Render
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:////tmp/database.db"
 
-if DATABASE_URL:
-    app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
-else:
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:////tmp/database.db"
-
-app.config["UPLOAD_FOLDER"] = "static/uploads"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
@@ -27,29 +20,21 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
 
-# ---------------- DATABASE ---------------- #
+
+# ---------------- DATABASE MODELS ---------------- #
 
 class User(UserMixin, db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
-    username = db.Column(db.String(150), unique=True)
+    username = db.Column(db.String(150), unique=True, nullable=False)
 
-    email = db.Column(db.String(150))
+    email = db.Column(db.String(150), nullable=False)
 
-    password = db.Column(db.String(200))
-
-    profile_image = db.Column(db.String(200), default="default.png")
+    password = db.Column(db.String(200), nullable=False)
 
 
-class Analytics(db.Model):
-
-    id = db.Column(db.Integer, primary_key=True)
-
-    user_id = db.Column(db.Integer)
-
-    strength = db.Column(db.String(50))
-
+# ---------------- USER LOADER ---------------- #
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -57,54 +42,17 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 
+# ---------------- CREATE TABLES ---------------- #
+
 with app.app_context():
     db.create_all()
-
-# ---------------- PASSWORD ANALYZER ---------------- #
-
-def analyze_password(password):
-
-    score = 0
-
-    if len(password) >= 8:
-        score += 25
-
-    if any(c.isupper() for c in password):
-        score += 25
-
-    if any(c.isdigit() for c in password):
-        score += 25
-
-    if any(c in "!@#$%^&*" for c in password):
-        score += 25
-
-    if score <= 25:
-        strength = "Weak"
-    elif score <= 75:
-        strength = "Medium"
-    else:
-        strength = "Strong"
-
-    return score, strength
-
-
-# ---------------- PASSWORD SUGGESTION ---------------- #
-
-def generate_password():
-
-    letters = string.ascii_letters
-    digits = string.digits
-    symbols = "!@#$%^&*"
-
-    password = "".join(random.choice(letters+digits+symbols) for i in range(12))
-
-    return password
 
 
 # ---------------- ROUTES ---------------- #
 
 @app.route("/")
 def home():
+
     return redirect(url_for("login"))
 
 
@@ -115,16 +63,33 @@ def register():
 
     if request.method == "POST":
 
-        username = request.form["username"]
-        email = request.form["email"]
-        password = generate_password_hash(request.form["password"])
+        try:
 
-        user = User(username=username,email=email,password=password)
+            username = request.form["username"]
+            email = request.form["email"]
+            password = request.form["password"]
 
-        db.session.add(user)
-        db.session.commit()
+            hashed_password = generate_password_hash(password)
 
-        return redirect(url_for("login"))
+            existing_user = User.query.filter_by(username=username).first()
+
+            if existing_user:
+                return "Username already exists"
+
+            new_user = User(
+                username=username,
+                email=email,
+                password=hashed_password
+            )
+
+            db.session.add(new_user)
+            db.session.commit()
+
+            return redirect(url_for("login"))
+
+        except Exception as e:
+
+            return f"Register error: {str(e)}"
 
     return render_template("register.html")
 
@@ -141,73 +106,24 @@ def login():
 
         user = User.query.filter_by(username=username).first()
 
-        if user and check_password_hash(user.password,password):
+        if user and check_password_hash(user.password, password):
 
             login_user(user)
 
             return redirect(url_for("dashboard"))
+
+        return "Invalid login"
 
     return render_template("login.html")
 
 
 # DASHBOARD
 
-@app.route("/dashboard", methods=["GET","POST"])
+@app.route("/dashboard")
 @login_required
 def dashboard():
 
-    strength = ""
-    percentage = 0
-
-    if request.method == "POST":
-
-        password = request.form["password"]
-
-        percentage, strength = analyze_password(password)
-
-        data = Analytics(user_id=current_user.id,strength=strength)
-
-        db.session.add(data)
-        db.session.commit()
-
-    strong = Analytics.query.filter_by(user_id=current_user.id,strength="Strong").count()
-    medium = Analytics.query.filter_by(user_id=current_user.id,strength="Medium").count()
-    weak = Analytics.query.filter_by(user_id=current_user.id,strength="Weak").count()
-
-    suggestion = generate_password()
-
-    return render_template(
-        "dashboard.html",
-        strength=strength,
-        percentage=percentage,
-        strong=strong,
-        medium=medium,
-        weak=weak,
-        suggestion=suggestion
-    )
-
-
-# PROFILE IMAGE UPLOAD
-
-@app.route("/profile", methods=["GET","POST"])
-@login_required
-def profile():
-
-    if request.method == "POST":
-
-        file = request.files["image"]
-
-        filename = secure_filename(file.filename)
-
-        path = os.path.join(app.config["UPLOAD_FOLDER"],filename)
-
-        file.save(path)
-
-        current_user.profile_image = filename
-
-        db.session.commit()
-
-    return render_template("profile.html")
+    return render_template("dashboard.html")
 
 
 # LOGOUT
@@ -221,8 +137,10 @@ def logout():
     return redirect(url_for("login"))
 
 
+# ---------------- RUN APP ---------------- #
+
 if __name__ == "__main__":
 
-    port = int(os.environ.get("PORT",5000))
+    port = int(os.environ.get("PORT", 5000))
 
-    app.run(host="0.0.0.0",port=port)
+    app.run(host="0.0.0.0", port=port)
