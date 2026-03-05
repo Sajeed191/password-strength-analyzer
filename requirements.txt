@@ -1,8 +1,5 @@
 Flask
 Flask-Login
 Flask-SQLAlchemy
-Flask-WTF
 Werkzeug
 gunicorn
-python-dotenv
-psycopg2-binary
