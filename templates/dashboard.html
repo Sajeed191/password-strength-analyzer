@@ -1,213 +1,51 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SecureVault</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Dashboard - SecureVault</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #141e30;
+            background: linear-gradient(to right, #243b55, #141e30);
+            color: white;
+            text-align: center;
+            padding-top: 50px;
+        }
 
-<style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Arial;}
+        input {
+            padding: 10px;
+            width: 300px;
+        }
 
-body{
-    background:linear-gradient(135deg,#0f172a,#1e293b);
-    color:white;
-}
+        button {
+            padding: 10px;
+        }
 
-/* HAMBURGER */
-.hamburger{
-    width:30px;
-    height:22px;
-    cursor:pointer;
-    display:flex;
-    flex-direction:column;
-    justify-content:space-between;
-}
-.hamburger span{
-    height:4px;
-    background:white;
-    border-radius:5px;
-    transition:0.4s;
-}
-.hamburger.active span:nth-child(1){
-    transform:rotate(45deg) translate(5px,5px);
-}
-.hamburger.active span:nth-child(2){
-    opacity:0;
-}
-.hamburger.active span:nth-child(3){
-    transform:rotate(-45deg) translate(6px,-6px);
-}
-
-/* SIDEBAR */
-.sidebar{
-    position:fixed;
-    left:-250px;
-    top:0;
-    width:250px;
-    height:100vh;
-    backdrop-filter:blur(20px);
-    background:rgba(255,255,255,0.05);
-    padding:20px;
-    transition:0.4s;
-}
-.sidebar.active{left:0;}
-.sidebar.mini{width:70px;}
-
-.sidebar a{
-    display:block;
-    padding:12px;
-    margin:10px 0;
-    color:white;
-    text-decoration:none;
-    border-radius:8px;
-    transition:0.3s;
-}
-.sidebar a:hover{background:rgba(255,255,255,0.1);}
-
-/* BLUR OVERLAY */
-.overlay{
-    position:fixed;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
-    backdrop-filter:blur(8px);
-    opacity:0;
-    visibility:hidden;
-    transition:0.3s;
-}
-.overlay.active{
-    opacity:1;
-    visibility:visible;
-}
-
-/* MAIN */
-.main{
-    padding:30px;
-    transition:0.4s;
-}
-
-/* GLASS CARD */
-.card{
-    background:rgba(255,255,255,0.1);
-    backdrop-filter:blur(15px);
-    padding:20px;
-    border-radius:15px;
-    margin-top:20px;
-    transform:scale(0.95);
-    animation:scaleIn 0.5s forwards;
-}
-@keyframes scaleIn{
-    to{transform:scale(1);}
-}
-
-input,button{
-    width:100%;
-    padding:12px;
-    margin-top:10px;
-    border:none;
-    border-radius:8px;
-}
-
-button{
-    background:#3b82f6;
-    color:white;
-    cursor:pointer;
-}
-</style>
+        .result {
+            margin-top: 20px;
+        }
+    </style>
 </head>
-
 <body>
 
-<div style="padding:20px;">
-    <div class="hamburger" id="hamburger" onclick="toggleSidebar()">
-        <span></span>
-        <span></span>
-        <span></span>
-    </div>
+<h2>Welcome, {{ current_user.username }}</h2>
+
+<form method="POST">
+    <input type="text" name="password" placeholder="Enter password" required>
+    <button type="submit">Analyze</button>
+</form>
+
+{% if percentage %}
+<div class="result">
+    <p>Strength: {{ strength }}</p>
+    <p>Score: {{ percentage }}%</p>
+    <p>Generated Strong Password:</p>
+    <p><b>{{ generated_password }}</b></p>
 </div>
+{% endif %}
 
-<div class="sidebar" id="sidebar">
-    <a href="#" onclick="showPage('dashboard')">Dashboard</a>
-    <a href="#" onclick="showPage('analytics')">Analytics</a>
-    <a href="#" onclick="showPage('profile')">Profile</a>
-    <a href="/logout">Logout</a>
-</div>
-
-<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
-
-<div class="main">
-
-<!-- DASHBOARD -->
-<div id="dashboard" class="page">
-    <h2>Welcome, {{ current_user.username }}</h2>
-
-    <div class="card">
-        <h3>Password Analyzer</h3>
-        <form method="POST">
-            <input type="text" name="password" placeholder="Enter password" required>
-            <button type="submit">Analyze</button>
-        </form>
-        <p>Score: {{ percentage }}%</p>
-        <p>Strength: {{ strength }}</p>
-    </div>
-</div>
-
-<!-- ANALYTICS -->
-<div id="analytics" class="page" style="display:none;">
-    <div class="card">
-        <h3>Analytics Overview</h3>
-        <canvas id="chart"></canvas>
-    </div>
-</div>
-
-<!-- PROFILE -->
-<div id="profile" class="page" style="display:none;">
-    <div class="card">
-        <h3>Edit Profile</h3>
-        <img src="{{ url_for('static', filename='uploads/' + current_user.profile_image) }}" width="100">
-        <form action="/update_profile" method="POST" enctype="multipart/form-data">
-            <input type="text" name="username" value="{{ current_user.username }}">
-            <input type="email" name="email" value="{{ current_user.email }}">
-            <input type="file" name="profile_image">
-            <button type="submit">Update</button>
-        </form>
-    </div>
-</div>
-
-</div>
-
-<script>
-function toggleSidebar(){
-    document.getElementById("sidebar").classList.toggle("active");
-    document.getElementById("overlay").classList.toggle("active");
-    document.getElementById("hamburger").classList.toggle("active");
-}
-
-function showPage(page){
-    document.querySelectorAll(".page").forEach(p=>p.style.display="none");
-    document.getElementById(page).style.display="block";
-    localStorage.setItem("activePage",page);
-    toggleSidebar();
-}
-
-window.onload=function(){
-    let page=localStorage.getItem("activePage");
-    if(page){showPage(page);}
-}
-
-/* Chart.js */
-new Chart(document.getElementById("chart"),{
-    type:"doughnut",
-    data:{
-        labels:["Strong","Weak"],
-        datasets:[{
-            data:[{{ strong }},{{ weak }}],
-            backgroundColor:["#22c55e","#ef4444"]
-        }]
-    }
-});
-</script>
+<br>
+<a href="/logout">Logout</a>
 
 </body>
 </html>
