@@ -1,33 +1,56 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <title>Dashboard</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<link rel="stylesheet" href="/static/css/style.css">
+
 </head>
 
 <body>
 
-<h1>Welcome {{ current_user.username }}</h1>
+<h1>Dashboard</h1>
 
 <form method="POST">
 
-<input type="text" name="password" placeholder="Enter password to analyze">
+<input type="text" name="password" placeholder="Enter password">
 
 <button type="submit">Analyze</button>
 
 </form>
 
-<h2>Password Strength: {{ strength }}</h2>
+<h2>Strength: {{strength}}</h2>
 
-<h2>Score: {{ percentage }}%</h2>
+<h2>Score: {{percentage}}%</h2>
 
-<h3>Total Tests: {{ total }}</h3>
+<h3>Suggested Password: {{suggestion}}</h3>
 
-<h3>Strong Passwords: {{ strong }}</h3>
+<canvas id="chart"></canvas>
 
-<h3>Weak Passwords: {{ weak }}</h3>
+<script>
 
-<br>
+var ctx=document.getElementById('chart');
 
+new Chart(ctx,{
+
+type:'doughnut',
+
+data:{
+labels:["Strong","Medium","Weak"],
+datasets:[{
+data:[{{strong}},{{medium}},{{weak}}],
+backgroundColor:["green","orange","red"]
+}]
+}
+
+});
+
+</script>
+
+<a href="/profile">Profile</a>
 <a href="/logout">Logout</a>
 
 </body>
