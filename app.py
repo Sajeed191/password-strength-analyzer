@@ -1,16 +1,24 @@
+import os
+
 from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
-import os
 
 app = Flask(__name__)
 
-# Secret key
+# ---------------- CONFIG ---------------- #
+
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "devsecret")
 
-# IMPORTANT: writable directory for Render
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:////tmp/database.db"
+# Detect production database (Render PostgreSQL)
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+if DATABASE_URL:
+    app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
+else:
+    # Local fallback database
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db"
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
@@ -38,7 +46,6 @@ class User(UserMixin, db.Model):
 
 @login_manager.user_loader
 def load_user(user_id):
-
     return User.query.get(int(user_id))
 
 
@@ -52,7 +59,6 @@ with app.app_context():
 
 @app.route("/")
 def home():
-
     return redirect(url_for("login"))
 
 
@@ -88,7 +94,6 @@ def register():
             return redirect(url_for("login"))
 
         except Exception as e:
-
             return f"Register error: {str(e)}"
 
     return render_template("register.html")
@@ -112,7 +117,7 @@ def login():
 
             return redirect(url_for("dashboard"))
 
-        return "Invalid login"
+        return "Invalid username or password"
 
     return render_template("login.html")
 
@@ -137,7 +142,7 @@ def logout():
     return redirect(url_for("login"))
 
 
-# ---------------- RUN APP ---------------- #
+# ---------------- RUN SERVER ---------------- #
 
 if __name__ == "__main__":
 
