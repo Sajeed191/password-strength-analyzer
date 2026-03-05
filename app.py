@@ -1,42 +1,41 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user
+from werkzeug.security import generate_password_hash, check_password_hash
 import re
 
 app = Flask(__name__)
 
-# Secret key for sessions
-app.config['SECRET_KEY'] = 'secretkey123'
-
-# Database configuration
+app.config['SECRET_KEY'] = 'cybersecretkey'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
-# Login manager setup
 login_manager = LoginManager()
 login_manager.init_app(app)
-login_manager.login_view = 'login'
+login_manager.login_view = "login"
 
 
-# -----------------------
+# --------------------
 # Database Model
-# -----------------------
+# --------------------
+
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True)
-    password = db.Column(db.String(100))
+    password = db.Column(db.String(200))
 
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return db.session.get(User, int(user_id))
 
 
-# -----------------------
-# Password Strength Logic
-# -----------------------
+# --------------------
+# Password Strength
+# --------------------
+
 def check_password_strength(password):
 
     score = 0
@@ -44,89 +43,97 @@ def check_password_strength(password):
     if len(password) >= 8:
         score += 1
 
-    if re.search("[a-z]", password) and re.search("[A-Z]", password):
+    if re.search("[A-Z]", password) and re.search("[a-z]", password):
         score += 1
 
     if re.search("[0-9]", password):
         score += 1
 
-    if re.search("[@#$%^&*]", password):
+    if re.search("[@#$%^&*!]", password):
         score += 1
 
     if score == 1:
         return "Weak"
     elif score == 2:
-        return "Moderate"
-    elif score >= 3:
+        return "Medium"
+    elif score == 3:
         return "Strong"
     else:
-        return "Very Weak"
+        return "Very Strong"
 
 
-# -----------------------
+# --------------------
 # Routes
-# -----------------------
+# --------------------
 
-@app.route('/')
+@app.route("/")
 def home():
     return render_template("index.html")
 
 
-@app.route('/analyze', methods=['POST'])
+@app.route("/analyze", methods=["POST"])
 @login_required
 def analyze():
-    password = request.form['password']
+
+    password = request.form["password"]
     result = check_password_strength(password)
+
     return render_template("result.html", strength=result)
 
 
-@app.route('/register', methods=['GET', 'POST'])
+@app.route("/register", methods=["GET","POST"])
 def register():
 
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
+    if request.method == "POST":
 
-        user = User(username=username, password=password)
+        username = request.form["username"]
+        password = request.form["password"]
+
+        hashed_password = generate_password_hash(password)
+
+        user = User(username=username, password=hashed_password)
+
         db.session.add(user)
         db.session.commit()
 
-        flash("Registration successful")
-        return redirect(url_for('login'))
+        flash("Account created successfully")
+        return redirect(url_for("login"))
 
     return render_template("register.html")
 
 
-@app.route('/login', methods=['GET', 'POST'])
+@app.route("/login", methods=["GET","POST"])
 def login():
 
-    if request.method == 'POST':
+    if request.method == "POST":
 
-        username = request.form['username']
-        password = request.form['password']
+        username = request.form["username"]
+        password = request.form["password"]
 
-        user = User.query.filter_by(username=username, password=password).first()
+        user = User.query.filter_by(username=username).first()
 
-        if user:
+        if user and check_password_hash(user.password, password):
+
             login_user(user)
-            return redirect(url_for('home'))
+            return redirect(url_for("home"))
+
         else:
-            flash("Invalid login")
+            flash("Invalid username or password")
 
     return render_template("login.html")
 
 
-@app.route('/logout')
+@app.route("/logout")
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for('login'))
+    return redirect(url_for("login"))
 
 
-# -----------------------
-# Run App
-# -----------------------
+# --------------------
+
 if __name__ == "__main__":
+
     with app.app_context():
         db.create_all()
 
