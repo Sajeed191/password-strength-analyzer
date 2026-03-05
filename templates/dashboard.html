@@ -1,235 +1,32 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>SecureVault Dashboard</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<style>
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: Arial, sans-serif;
-}
-
-body {
-    background: #0f172a;
-    color: white;
-    overflow-x: hidden;
-}
-
-/* TOP BAR */
-.topbar {
-    height: 60px;
-    background: #111827;
-    display: flex;
-    align-items: center;
-    padding: 0 20px;
-}
-
-.menu-btn {
-    font-size: 24px;
-    cursor: pointer;
-}
-
-/* SIDEBAR */
-.sidebar {
-    position: fixed;
-    left: -260px;
-    top: 0;
-    width: 260px;
-    height: 100vh;
-    background: #111827;
-    padding: 30px 20px;
-    transition: left 0.4s ease;
-    z-index: 1001;
-}
-
-.sidebar.active {
-    left: 0;
-}
-
-.sidebar h2 {
-    margin-bottom: 40px;
-}
-
-.sidebar a {
-    display: block;
-    padding: 12px;
-    margin-bottom: 10px;
-    text-decoration: none;
-    color: #cbd5e1;
-    border-radius: 8px;
-    transition: 0.3s;
-}
-
-.sidebar a:hover {
-    background: #1e293b;
-    color: white;
-}
-
-/* OVERLAY */
-.overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.6);
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.4s ease;
-    z-index: 1000;
-}
-
-.overlay.active {
-    opacity: 1;
-    visibility: visible;
-}
-
-/* MAIN CONTENT */
-.main {
-    padding: 40px;
-    transition: 0.4s ease;
-}
-
-.card {
-    background: #1e293b;
-    padding: 20px;
-    border-radius: 12px;
-    margin-bottom: 20px;
-}
-
-.analyzer {
-    background: #1e293b;
-    padding: 30px;
-    border-radius: 12px;
-}
-
-input {
-    width: 100%;
-    padding: 12px;
-    margin-top: 15px;
-    border-radius: 8px;
-    border: none;
-}
-
-button {
-    margin-top: 15px;
-    padding: 12px;
-    width: 100%;
-    border-radius: 8px;
-    border: none;
-    background: #3b82f6;
-    color: white;
-    cursor: pointer;
-}
-
-.progress-bar {
-    margin-top: 20px;
-    height: 12px;
-    background: #334155;
-    border-radius: 10px;
-    overflow: hidden;
-}
-
-.progress-fill {
-    height: 100%;
-    width: {{ percentage if percentage else 0 }}%;
-    background: #22c55e;
-    transition: 0.5s ease;
-}
-
-.result-box {
-    margin-top: 20px;
-    padding: 15px;
-    background: #0f172a;
-    border-radius: 10px;
-}
-
-/* DESKTOP FIX */
-@media(min-width: 768px){
-    .sidebar {
-        left: 0;
-    }
-    .overlay {
-        display: none;
-    }
-}
-</style>
+<title>Dashboard</title>
 </head>
 
 <body>
 
-<!-- TOP BAR -->
-<div class="topbar">
-    <div class="menu-btn" onclick="openSidebar()">☰</div>
-</div>
+<h1>Welcome {{ current_user.username }}</h1>
 
-<!-- SIDEBAR -->
-<div class="sidebar" id="sidebar">
-    <h2>🔐 SecureVault</h2>
+<form method="POST">
 
-    <a href="#" onclick="selectMenu()">🏠 Dashboard</a>
-    <a href="#" onclick="selectMenu()">📊 Analytics</a>
-    <a href="#" onclick="selectMenu()">👤 Profile</a>
-    <a href="/logout">🚪 Logout</a>
-</div>
+<input type="text" name="password" placeholder="Enter password to test">
 
-<!-- OVERLAY -->
-<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+<button type="submit">Analyze</button>
 
-<!-- MAIN CONTENT -->
-<div class="main">
+</form>
 
-    <h1>Welcome, {{ current_user.username }}</h1>
-    <br>
+<h2>Strength: {{ strength }}</h2>
 
-    <div class="card">
-        <h3>Security Score</h3>
-        <p>{{ percentage if percentage else 0 }}%</p>
-    </div>
+<h2>Score: {{ percentage }}%</h2>
 
-    <div class="analyzer">
-        <h2>Password Analyzer</h2>
+<h3>Total Tests: {{ total }}</h3>
 
-        <form method="POST">
-            <input type="text" name="password" placeholder="Enter password..." required>
-            <button type="submit">Analyze</button>
-        </form>
+<h3>Strong Passwords: {{ strong }}</h3>
 
-        {% if percentage %}
-        <div class="progress-bar">
-            <div class="progress-fill"></div>
-        </div>
+<h3>Weak Passwords: {{ weak }}</h3>
 
-        <div class="result-box">
-            <p><strong>Strength:</strong> {{ strength }}</p>
-            <p><strong>Score:</strong> {{ percentage }}%</p>
-            <p><strong>Generated Password:</strong></p>
-            <p>{{ generated_password }}</p>
-        </div>
-        {% endif %}
-    </div>
-
-</div>
-
-<script>
-function openSidebar() {
-    document.getElementById("sidebar").classList.add("active");
-    document.getElementById("overlay").classList.add("active");
-}
-
-function closeSidebar() {
-    document.getElementById("sidebar").classList.remove("active");
-    document.getElementById("overlay").classList.remove("active");
-}
-
-function selectMenu() {
-    closeSidebar(); // auto close when clicking menu
-}
-</script>
+<a href="/logout">Logout</a>
 
 </body>
 </html>
