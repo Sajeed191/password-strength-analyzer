@@ -6,8 +6,13 @@ import os
 
 app = Flask(__name__)
 
+# ---------------- CONFIG ---------------- #
+
 app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY", "secret123")
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+
+# IMPORTANT: writable database for Render
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/database.db'
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -16,28 +21,35 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
 
-
-# ---------------- DATABASE ---------------- #
+# ---------------- DATABASE MODELS ---------------- #
 
 class User(UserMixin, db.Model):
+
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(150), unique=True)
-    email = db.Column(db.String(150))
-    password = db.Column(db.String(200))
+
+    username = db.Column(db.String(150), unique=True, nullable=False)
+
+    email = db.Column(db.String(150), nullable=False)
+
+    password = db.Column(db.String(200), nullable=False)
 
 
 class Analytics(db.Model):
+
     id = db.Column(db.Integer, primary_key=True)
+
     user_id = db.Column(db.Integer)
+
     strength = db.Column(db.String(50))
 
 
 @login_manager.user_loader
 def load_user(user_id):
+
     return User.query.get(int(user_id))
 
 
-# ----------- CREATE TABLES AUTOMATICALLY ----------- #
+# ---------------- CREATE TABLES ---------------- #
 
 with app.app_context():
     db.create_all()
@@ -63,8 +75,10 @@ def analyze_password(password):
 
     if score <= 25:
         strength = "Weak"
+
     elif score <= 75:
         strength = "Medium"
+
     else:
         strength = "Strong"
 
@@ -75,43 +89,58 @@ def analyze_password(password):
 
 @app.route("/")
 def home():
+
     return redirect(url_for("login"))
 
 
 # REGISTER
 
-@app.route("/register", methods=["GET", "POST"])
+@app.route("/register", methods=["GET","POST"])
 def register():
 
     if request.method == "POST":
 
-        username = request.form["username"]
-        email = request.form["email"]
-        password = generate_password_hash(request.form["password"])
+        try:
 
-        existing_user = User.query.filter_by(username=username).first()
+            username = request.form["username"]
 
-        if existing_user:
-            return "Username already exists"
+            email = request.form["email"]
 
-        new_user = User(username=username, email=email, password=password)
+            password = generate_password_hash(request.form["password"])
 
-        db.session.add(new_user)
-        db.session.commit()
+            existing_user = User.query.filter_by(username=username).first()
 
-        return redirect(url_for("login"))
+            if existing_user:
+                return "Username already exists"
+
+            new_user = User(
+                username=username,
+                email=email,
+                password=password
+            )
+
+            db.session.add(new_user)
+
+            db.session.commit()
+
+            return redirect(url_for("login"))
+
+        except Exception as e:
+
+            return f"Register Error: {str(e)}"
 
     return render_template("register.html")
 
 
 # LOGIN
 
-@app.route("/login", methods=["GET", "POST"])
+@app.route("/login", methods=["GET","POST"])
 def login():
 
     if request.method == "POST":
 
         username = request.form["username"]
+
         password = request.form["password"]
 
         user = User.query.filter_by(username=username).first()
@@ -129,7 +158,7 @@ def login():
 
 # DASHBOARD
 
-@app.route("/dashboard", methods=["GET", "POST"])
+@app.route("/dashboard", methods=["GET","POST"])
 @login_required
 def dashboard():
 
@@ -142,14 +171,26 @@ def dashboard():
 
         percentage, strength = analyze_password(password)
 
-        data = Analytics(user_id=current_user.id, strength=strength)
+        record = Analytics(
+            user_id=current_user.id,
+            strength=strength
+        )
 
-        db.session.add(data)
+        db.session.add(record)
+
         db.session.commit()
 
     total = Analytics.query.filter_by(user_id=current_user.id).count()
-    strong = Analytics.query.filter_by(user_id=current_user.id, strength="Strong").count()
-    weak = Analytics.query.filter_by(user_id=current_user.id, strength="Weak").count()
+
+    strong = Analytics.query.filter_by(
+        user_id=current_user.id,
+        strength="Strong"
+    ).count()
+
+    weak = Analytics.query.filter_by(
+        user_id=current_user.id,
+        strength="Weak"
+    ).count()
 
     return render_template(
         "dashboard.html",
@@ -172,7 +213,7 @@ def logout():
     return redirect(url_for("login"))
 
 
-# RUN APP
+# ---------------- RUN APP ---------------- #
 
 if __name__ == "__main__":
 
