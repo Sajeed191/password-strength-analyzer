@@ -15,6 +15,10 @@
 
 <h1>🔐 Password Security Analyzer</h1>
 
+<p style="margin-bottom:20px;">
+Analyze password strength and detect security risks
+</p>
+
 <form action="/analyze" method="POST">
 
 <input
@@ -29,11 +33,21 @@ required
 
 <p id="strength-text"></p>
 
-<button type="submit">Analyze Password</button>
+<button type="submit">
+Analyze Password
+</button>
 
 </form>
 
-<a href="/dashboard">Security Dashboard</a>
+<br>
+
+<button onclick="generatePassword()">
+🤖 Generate Secure Password
+</button>
+
+<br><br>
+
+<a href="/dashboard">📊 Security Dashboard</a>
 
 <br>
 
@@ -41,7 +55,26 @@ required
 
 </div>
 
+
 <script src="/static/js/strength.js"></script>
+
+<script>
+
+function generatePassword(){
+
+fetch("/generate")
+
+.then(response => response.json())
+
+.then(data => {
+
+document.getElementById("password").value = data.password
+
+})
+
+}
+
+</script>
 
 </body>
 
