@@ -18,9 +18,7 @@ login_manager.init_app(app)
 login_manager.login_view = "login"
 
 
-# =========================
-# DATABASE MODEL
-# =========================
+# ================= DATABASE =================
 
 class User(UserMixin, db.Model):
 
@@ -36,9 +34,7 @@ def load_user(user_id):
     return db.session.get(User, int(user_id))
 
 
-# =========================
-# PASSWORD STRENGTH
-# =========================
+# ================= PASSWORD STRENGTH =================
 
 def check_password_strength(password):
 
@@ -69,9 +65,7 @@ def check_password_strength(password):
         return "Very Strong"
 
 
-# =========================
-# PASSWORD ENTROPY
-# =========================
+# ================= PASSWORD ENTROPY =================
 
 def password_entropy(password):
 
@@ -97,9 +91,7 @@ def password_entropy(password):
     return round(entropy, 2)
 
 
-# =========================
-# HOME PAGE
-# =========================
+# ================= HOME =================
 
 @app.route("/")
 @login_required
@@ -108,9 +100,7 @@ def home():
     return render_template("index.html")
 
 
-# =========================
-# ANALYZE PASSWORD
-# =========================
+# ================= ANALYZE PASSWORD =================
 
 @app.route("/analyze", methods=["POST"])
 @login_required
@@ -129,9 +119,7 @@ def analyze():
     )
 
 
-# =========================
-# DASHBOARD
-# =========================
+# ================= DASHBOARD =================
 
 @app.route("/dashboard")
 @login_required
@@ -140,9 +128,7 @@ def dashboard():
     return render_template("dashboard.html")
 
 
-# =========================
-# REGISTER
-# =========================
+# ================= REGISTER =================
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -152,9 +138,9 @@ def register():
         username = request.form.get("username")
         password = request.form.get("password")
 
-        existing_user = User.query.filter_by(username=username).first()
+        user = User.query.filter_by(username=username).first()
 
-        if existing_user:
+        if user:
             flash("Username already exists")
             return redirect(url_for("register"))
 
@@ -175,9 +161,7 @@ def register():
     return render_template("register.html")
 
 
-# =========================
-# LOGIN
-# =========================
+# ================= LOGIN =================
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -202,9 +186,7 @@ def login():
     return render_template("login.html")
 
 
-# =========================
-# LOGOUT
-# =========================
+# ================= LOGOUT =================
 
 @app.route("/logout")
 @login_required
@@ -215,9 +197,7 @@ def logout():
     return redirect(url_for("login"))
 
 
-# =========================
-# RUN APPLICATION
-# =========================
+# ================= RUN =================
 
 if __name__ == "__main__":
 
