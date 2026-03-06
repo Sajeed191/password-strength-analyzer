@@ -1,16 +1,14 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 
 app = Flask(__name__)
-app.secret_key = "secret123"
+app.secret_key = "supersecretkey"
 
-# temporary user storage (replace with database later)
+# temporary storage (you can replace with database later)
 users = {}
 
 @app.route("/")
 def home():
-    if "username" in session:
-        return redirect(url_for("dashboard"))
-    return redirect(url_for("login"))
+    return render_template("login.html")
 
 
 # REGISTER
@@ -23,12 +21,12 @@ def register():
         password = request.form.get("password")
 
         if username in users:
-            flash("Username already exists!")
+            flash("Username already exists.", "danger")
             return redirect(url_for("register"))
 
         users[username] = password
 
-        flash("Account created successfully!")
+        flash("Account created successfully!", "success")
         return redirect(url_for("login"))
 
     return render_template("register.html")
@@ -44,10 +42,11 @@ def login():
         password = request.form.get("password")
 
         if username in users and users[username] == password:
+
             session["username"] = username
             return redirect(url_for("dashboard"))
 
-        flash("Invalid username or password")
+        flash("Invalid username or password", "danger")
 
     return render_template("login.html")
 
@@ -59,12 +58,7 @@ def dashboard():
     if "username" not in session:
         return redirect(url_for("login"))
 
-    return render_template(
-        "dashboard.html",
-        weak=4,
-        medium=6,
-        strong=3
-    )
+    return render_template("dashboard.html")
 
 
 # LOGOUT
@@ -72,8 +66,6 @@ def dashboard():
 def logout():
 
     session.pop("username", None)
-    flash("Logged out successfully")
-
     return redirect(url_for("login"))
 
 
