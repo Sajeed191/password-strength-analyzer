@@ -1,28 +1,147 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
+<meta charset="UTF-8">
 <title>Register</title>
-<link rel="stylesheet" href="/static/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Poppins',sans-serif;
+}
+
+body{
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+background:linear-gradient(135deg,#141e30,#243b55);
+overflow:hidden;
+}
+
+body::before{
+content:"";
+position:absolute;
+width:400px;
+height:400px;
+background:#00f5ff;
+filter:blur(180px);
+top:-100px;
+left:-100px;
+opacity:.3;
+}
+
+body::after{
+content:"";
+position:absolute;
+width:400px;
+height:400px;
+background:#ff00ff;
+filter:blur(180px);
+bottom:-100px;
+right:-100px;
+opacity:.3;
+}
+
+.card{
+width:380px;
+padding:40px;
+border-radius:20px;
+background:rgba(255,255,255,0.05);
+backdrop-filter:blur(20px);
+box-shadow:0 0 40px rgba(0,0,0,.3);
+color:white;
+text-align:center;
+}
+
+.card h2{
+margin-bottom:25px;
+}
+
+.input-group{
+margin-bottom:18px;
+text-align:left;
+}
+
+.input-group label{
+font-size:14px;
+}
+
+.input-group input{
+width:100%;
+padding:12px;
+margin-top:5px;
+border:none;
+outline:none;
+border-radius:10px;
+background:rgba(255,255,255,0.1);
+color:white;
+}
+
+button{
+width:100%;
+padding:12px;
+border:none;
+border-radius:10px;
+background:linear-gradient(45deg,#00f5ff,#ff00ff);
+color:white;
+font-weight:600;
+cursor:pointer;
+transition:.3s;
+}
+
+button:hover{
+transform:scale(1.05);
+box-shadow:0 0 15px #ff00ff;
+}
+
+a{
+color:#00f5ff;
+text-decoration:none;
+font-size:14px;
+}
+
+.footer{
+margin-top:15px;
+}
+
+</style>
 </head>
 
 <body>
 
-<div class="container">
+<div class="card">
 
-<h2>Create Account</h2>
+<h2>🚀 Create Account</h2>
 
 <form method="POST">
 
-<input type="text" name="username" placeholder="Username" required>
+<div class="input-group">
+<label>Username</label>
+<input type="text" name="username" required>
+</div>
 
-<input type="password" name="password" placeholder="Password" required>
+<div class="input-group">
+<label>Email</label>
+<input type="email" name="email" required>
+</div>
+
+<div class="input-group">
+<label>Password</label>
+<input type="password" name="password" required>
+</div>
 
 <button type="submit">Register</button>
 
 </form>
 
-<p><a href="/login">Back to Login</a></p>
+<div class="footer">
+<p>Already have an account? <a href="/login">Login</a></p>
+</div>
 
 </div>
 
