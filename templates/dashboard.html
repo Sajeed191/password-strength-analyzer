@@ -7,31 +7,109 @@
 
 <link rel="stylesheet" href="/static/css/style.css">
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 </head>
 
 <body>
 
 <div class="container">
 
-<h1>📊 Security Dashboard</h1>
+<h1>📊 Security Analytics Dashboard</h1>
 
-<p>Your password security monitoring center</p>
+<p style="margin-bottom:20px;">
+Overview of password strength analysis
+</p>
 
-<br>
-
-<ul style="list-style:none;line-height:2">
-
-<li>✔ Password Strength Analysis</li>
-<li>✔ Entropy Calculation</li>
-<li>✔ Real‑Time Strength Meter</li>
-
-</ul>
+<canvas id="strengthChart" width="400" height="300"></canvas>
 
 <br>
 
-<a href="/">Back to Analyzer</a>
+<div style="margin-top:20px;">
+
+<a href="/">
+
+<button>
+🔍 Analyze New Password
+</button>
+
+</a>
 
 </div>
+
+<br>
+
+<div>
+
+<a href="/logout">Logout</a>
+
+</div>
+
+</div>
+
+<script>
+
+var ctx = document.getElementById('strengthChart').getContext('2d');
+
+var strengthChart = new Chart(ctx, {
+
+type: 'pie',
+
+data: {
+
+labels: ['Weak', 'Medium', 'Strong'],
+
+datasets: [{
+
+label: 'Password Strength Distribution',
+
+data: [4, 6, 3],
+
+backgroundColor: [
+
+'#ff4d4d',
+
+'#ffa500',
+
+'#4dff88'
+
+],
+
+borderWidth: 1
+
+}]
+
+},
+
+options: {
+
+responsive: true,
+
+plugins: {
+
+legend: {
+
+labels: {
+
+color: "white",
+
+font: {
+
+size: 14
+
+}
+
+}
+
+}
+
+}
+
+}
+
+});
+
+</script>
 
 </body>
 
