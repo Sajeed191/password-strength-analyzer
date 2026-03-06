@@ -1,130 +1,81 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
-from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
+app.secret_key = "secret123"
 
-app.config['SECRET_KEY'] = 'secretkey'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# temporary user storage (replace with database later)
+users = {}
 
-db = SQLAlchemy(app)
-
-# -----------------------------
-# DATABASE MODEL
-# -----------------------------
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(150), unique=True, nullable=False)
-    password = db.Column(db.String(200), nullable=False)
-
-
-# -----------------------------
-# HOME
-# -----------------------------
-@app.route('/')
+@app.route("/")
 def home():
-    return redirect(url_for('login'))
+    if "username" in session:
+        return redirect(url_for("dashboard"))
+    return redirect(url_for("login"))
 
 
-# -----------------------------
 # REGISTER
-# -----------------------------
-@app.route('/register', methods=['GET', 'POST'])
+@app.route("/register", methods=["GET","POST"])
 def register():
 
-    if request.method == 'POST':
+    if request.method == "POST":
 
-        username = request.form.get('username')
-        password = request.form.get('password')
+        username = request.form.get("username")
+        password = request.form.get("password")
 
-        if not username or not password:
-            flash("Please fill all fields")
-            return redirect(url_for('register'))
+        if username in users:
+            flash("Username already exists!")
+            return redirect(url_for("register"))
 
-        # check existing user
-        existing_user = User.query.filter_by(username=username).first()
+        users[username] = password
 
-        if existing_user:
-            flash("Username already exists")
-            return redirect(url_for('register'))
+        flash("Account created successfully!")
+        return redirect(url_for("login"))
 
-        hashed_password = generate_password_hash(password)
-
-        new_user = User(username=username, password=hashed_password)
-
-        try:
-            db.session.add(new_user)
-            db.session.commit()
-
-        except:
-            db.session.rollback()
-            flash("Error creating account")
-            return redirect(url_for('register'))
-
-        flash("Account created successfully")
-        return redirect(url_for('login'))
-
-    return render_template('register.html')
+    return render_template("register.html")
 
 
-# -----------------------------
 # LOGIN
-# -----------------------------
-@app.route('/login', methods=['GET', 'POST'])
+@app.route("/login", methods=["GET","POST"])
 def login():
 
-    if request.method == 'POST':
+    if request.method == "POST":
 
-        username = request.form.get('username')
-        password = request.form.get('password')
+        username = request.form.get("username")
+        password = request.form.get("password")
 
-        user = User.query.filter_by(username=username).first()
+        if username in users and users[username] == password:
+            session["username"] = username
+            return redirect(url_for("dashboard"))
 
-        if user and check_password_hash(user.password, password):
+        flash("Invalid username or password")
 
-            session['user_id'] = user.id
-            session['username'] = user.username
-
-            return redirect(url_for('dashboard'))
-
-        else:
-            flash("Invalid username or password")
-
-    return render_template('login.html')
+    return render_template("login.html")
 
 
-# -----------------------------
 # DASHBOARD
-# -----------------------------
-@app.route('/dashboard')
+@app.route("/dashboard")
 def dashboard():
 
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
+    if "username" not in session:
+        return redirect(url_for("login"))
 
-    return render_template('dashboard.html')
+    return render_template(
+        "dashboard.html",
+        weak=4,
+        medium=6,
+        strong=3
+    )
 
 
-# -----------------------------
 # LOGOUT
-# -----------------------------
-@app.route('/logout')
+@app.route("/logout")
 def logout():
 
-    session.clear()
-    return redirect(url_for('login'))
+    session.pop("username", None)
+    flash("Logged out successfully")
+
+    return redirect(url_for("login"))
 
 
-# -----------------------------
-# DATABASE CREATE
-# -----------------------------
-with app.app_context():
-    db.create_all()
-
-
-# -----------------------------
-# RUN
-# -----------------------------
 if __name__ == "__main__":
     app.run(debug=True)
