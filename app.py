@@ -1,282 +1,138 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
-import math
-import re
-import random
-import string
-import hashlib
-import requests
 
 app = Flask(__name__)
 
-app.config['SECRET_KEY'] = "secret123"
-app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///user.db"
+# Secret key for sessions
+app.config['SECRET_KEY'] = 'secret123'
+
+# SQLite database
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = "login"
 
-
-# =====================
-# DATABASE MODEL
-# =====================
-
-class User(UserMixin, db.Model):
-
+# -----------------------------
+# Database Model
+# -----------------------------
+class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-
-    username = db.Column(db.String(100), unique=True)
-
-    password = db.Column(db.String(200))
+    username = db.Column(db.String(100), unique=True, nullable=False)
+    password = db.Column(db.String(200), nullable=False)
 
 
-# =====================
-# LOGIN MANAGER
-# =====================
-
-@login_manager.user_loader
-def load_user(user_id):
-    return db.session.get(User, int(user_id))
-
-
-# =====================
-# PASSWORD STRENGTH
-# =====================
-
-def password_strength(password):
-
-    score = 0
-
-    if len(password) >= 8:
-        score += 1
-
-    if re.search("[A-Z]", password):
-        score += 1
-
-    if re.search("[0-9]", password):
-        score += 1
-
-    if re.search("[@#$%^&*!]", password):
-        score += 1
-
-    if score <= 1:
-        return "Weak"
-
-    elif score == 2:
-        return "Medium"
-
-    elif score == 3:
-        return "Strong"
-
-    else:
-        return "Very Strong"
-
-
-# =====================
-# PASSWORD ENTROPY
-# =====================
-
-def entropy(password):
-
-    charset = 0
-
-    if re.search("[a-z]", password):
-        charset += 26
-
-    if re.search("[A-Z]", password):
-        charset += 26
-
-    if re.search("[0-9]", password):
-        charset += 10
-
-    if re.search("[@#$%^&*!]", password):
-        charset += 32
-
-    if charset == 0:
-        return 0
-
-    return round(len(password) * math.log2(charset), 2)
-
-
-# =====================
-# PASSWORD GENERATOR
-# =====================
-
-def generate_password():
-
-    chars = string.ascii_letters + string.digits + "@#$%^&*!?"
-
-    password = ''.join(random.choice(chars) for _ in range(14))
-
-    return password
-
-
-# =====================
-# DATA BREACH CHECK
-# =====================
-
-def check_breach(password):
-
-    sha1 = hashlib.sha1(password.encode()).hexdigest().upper()
-
-    prefix = sha1[:5]
-
-    suffix = sha1[5:]
-
-    url = f"https://api.pwnedpasswords.com/range/{prefix}"
-
-    res = requests.get(url)
-
-    hashes = (line.split(":") for line in res.text.splitlines())
-
-    for h, count in hashes:
-
-        if h == suffix:
-            return True
-
-    return False
-
-
-# =====================
-# HOME
-# =====================
-
-@app.route("/")
-@login_required
+# -----------------------------
+# Home Route
+# -----------------------------
+@app.route('/')
 def home():
-
-    return render_template("index.html")
-
-
-# =====================
-# ANALYZE PASSWORD
-# =====================
-
-@app.route("/analyze", methods=["POST"])
-@login_required
-def analyze():
-
-    password = request.form.get("password")
-
-    strength = password_strength(password)
-
-    ent = entropy(password)
-
-    breach = check_breach(password)
-
-    return render_template(
-        "result.html",
-        strength=strength,
-        entropy=ent,
-        breach=breach
-    )
+    return redirect(url_for('login'))
 
 
-# =====================
-# PASSWORD GENERATOR
-# =====================
-
-@app.route("/generate")
-@login_required
-def generate():
-
-    pwd = generate_password()
-
-    return jsonify({"password": pwd})
-
-
-# =====================
-# DASHBOARD
-# =====================
-
-@app.route("/dashboard")
-@login_required
-def dashboard():
-
-    data = {
-        "weak": 4,
-        "medium": 6,
-        "strong": 3
-    }
-
-    return render_template("dashboard.html", data=data)
-
-
-# =====================
-# REGISTER
-# =====================
-
-@app.route("/register", methods=["GET", "POST"])
+# -----------------------------
+# Register
+# -----------------------------
+@app.route('/register', methods=['GET', 'POST'])
 def register():
 
-    if request.method == "POST":
+    if request.method == 'POST':
 
-        username = request.form["username"]
+        username = request.form.get('username')
+        password = request.form.get('password')
 
-        password = request.form["password"]
+        # Check if username exists
+        user = User.query.filter_by(username=username).first()
 
-        hashed = generate_password_hash(password)
+        if user:
+            flash("Username already exists. Please choose another.", "danger")
+            return redirect(url_for('register'))
 
-        user = User(username=username, password=hashed)
+        # Hash password
+        hashed_password = generate_password_hash(password)
 
-        db.session.add(user)
+        new_user = User(
+            username=username,
+            password=hashed_password
+        )
 
-        db.session.commit()
+        try:
+            db.session.add(new_user)
+            db.session.commit()
 
-        return redirect(url_for("login"))
+            flash("Account created successfully!", "success")
+            return redirect(url_for('login'))
 
-    return render_template("register.html")
+        except Exception as e:
+            db.session.rollback()
+            flash("Registration failed. Try again.", "danger")
+            return redirect(url_for('register'))
+
+    return render_template('register.html')
 
 
-# =====================
-# LOGIN
-# =====================
-
-@app.route("/login", methods=["GET", "POST"])
+# -----------------------------
+# Login
+# -----------------------------
+@app.route('/login', methods=['GET', 'POST'])
 def login():
 
-    if request.method == "POST":
+    if request.method == 'POST':
 
-        username = request.form["username"]
-
-        password = request.form["password"]
+        username = request.form.get('username')
+        password = request.form.get('password')
 
         user = User.query.filter_by(username=username).first()
 
         if user and check_password_hash(user.password, password):
 
-            login_user(user)
+            session['user_id'] = user.id
+            session['username'] = user.username
 
-            return redirect(url_for("home"))
+            flash("Login successful!", "success")
+            return redirect(url_for('dashboard'))
 
-    return render_template("login.html")
+        else:
+            flash("Invalid username or password.", "danger")
+            return redirect(url_for('login'))
+
+    return render_template('login.html')
 
 
-# =====================
-# LOGOUT
-# =====================
+# -----------------------------
+# Dashboard
+# -----------------------------
+@app.route('/dashboard')
+def dashboard():
 
-@app.route("/logout")
-@login_required
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    return render_template('dashboard.html')
+
+
+# -----------------------------
+# Logout
+# -----------------------------
+@app.route('/logout')
 def logout():
 
-    logout_user()
+    session.clear()
+    flash("Logged out successfully.", "info")
 
-    return redirect(url_for("login"))
+    return redirect(url_for('login'))
 
 
-# =====================
-# START APP
-# =====================
+# -----------------------------
+# Create Database
+# -----------------------------
+with app.app_context():
+    db.create_all()
 
+
+# -----------------------------
+# Run App
+# -----------------------------
 if __name__ == "__main__":
-
-    with app.app_context():
-        db.create_all()
-
     app.run(debug=True)
