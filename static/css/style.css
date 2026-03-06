@@ -30,13 +30,10 @@ text-align:center;
 input{
 
 width:100%;
-
 padding:10px;
-
 margin-top:15px;
 
 border:none;
-
 border-radius:5px;
 
 }
@@ -48,7 +45,6 @@ margin-top:20px;
 padding:10px 20px;
 
 border:none;
-
 border-radius:5px;
 
 background:#22c55e;
@@ -62,7 +58,6 @@ cursor:pointer;
 #strength-bar{
 
 height:10px;
-
 width:0%;
 
 background:red;
@@ -78,7 +73,6 @@ transition:0.3s;
 a{
 
 color:#38bdf8;
-
 text-decoration:none;
 
 }
