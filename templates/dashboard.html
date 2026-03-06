@@ -1,115 +1,34 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <title>Dashboard</title>
 
-    <style>
+<title>Dashboard</title>
 
-        body{
-            font-family: Arial;
-            background:#f4f6f9;
-            margin:0;
-        }
-
-        .navbar{
-            background:#222;
-            color:white;
-            padding:15px;
-            display:flex;
-            justify-content:space-between;
-        }
-
-        .container{
-            width:80%;
-            margin:auto;
-            margin-top:40px;
-        }
-
-        .card{
-            background:white;
-            padding:20px;
-            border-radius:10px;
-            margin-bottom:20px;
-            box-shadow:0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        table{
-            width:100%;
-            border-collapse:collapse;
-        }
-
-        th,td{
-            padding:12px;
-            border-bottom:1px solid #ddd;
-            text-align:left;
-        }
-
-        th{
-            background:#f2f2f2;
-        }
-
-        .logout{
-            color:white;
-            text-decoration:none;
-            background:red;
-            padding:8px 12px;
-            border-radius:5px;
-        }
-
-    </style>
+<link rel="stylesheet" href="/static/css/style.css">
 
 </head>
 
 <body>
 
-<div class="navbar">
-
-    <div>
-        <strong>Password Strength Analyzer</strong>
-    </div>
-
-    <div>
-        Welcome {{ current_user.username }}
-        <a class="logout" href="/logout">Logout</a>
-    </div>
-
-</div>
-
-
 <div class="container">
 
-    <div class="card">
-        <h2>Dashboard</h2>
-        <p>Total Registered Users: <strong>{{ total_users }}</strong></p>
-    </div>
+<h1>Security Dashboard</h1>
 
-    <div class="card">
+<p>This dashboard will store password analysis statistics.</p>
 
-        <h3>Registered Users</h3>
+<ul>
+<li>Total passwords analyzed</li>
+<li>Weak passwords detected</li>
+<li>Strong passwords detected</li>
+</ul>
 
-        <table>
+<br>
 
-            <tr>
-                <th>ID</th>
-                <th>Username</th>
-                <th>Email</th>
-            </tr>
-
-            {% for user in users %}
-
-            <tr>
-                <td>{{ user.id }}</td>
-                <td>{{ user.username }}</td>
-                <td>{{ user.email }}</td>
-            </tr>
-
-            {% endfor %}
-
-        </table>
-
-    </div>
+<a href="/">Back</a>
 
 </div>
 
 </body>
+
 </html>
