@@ -1,25 +1,28 @@
 <!DOCTYPE html>
 <html>
-
 <head>
 
-<title>Dashboard</title>
+<title>Security Dashboard</title>
 
 <style>
 
 body{
 margin:0;
+font-family:Arial;
 background:#0f172a;
 color:white;
-font-family:Arial;
 }
 
 .sidebar{
-width:220px;
 height:100vh;
+width:220px;
 background:#020617;
 position:fixed;
 padding-top:20px;
+}
+
+.sidebar h2{
+text-align:center;
 }
 
 .sidebar a{
@@ -44,14 +47,23 @@ padding:20px;
 margin:10px;
 border-radius:10px;
 display:inline-block;
-width:200px;
+width:220px;
 text-align:center;
+}
+
+.generator{
+margin-top:40px;
+background:#1e293b;
+padding:20px;
+border-radius:10px;
+width:400px;
 }
 
 input{
 padding:10px;
 border:none;
 border-radius:5px;
+width:70%;
 }
 
 button{
@@ -61,6 +73,7 @@ border:none;
 border-radius:5px;
 color:white;
 cursor:pointer;
+margin-left:5px;
 }
 
 </style>
@@ -71,7 +84,7 @@ cursor:pointer;
 
 <div class="sidebar">
 
-<h2 style="text-align:center;">🔐 Security</h2>
+<h2>🔐 Security</h2>
 
 <a href="/dashboard">Dashboard</a>
 <a href="/strength">Password Analyzer</a>
@@ -84,22 +97,31 @@ cursor:pointer;
 <h1>Welcome {{user}}</h1>
 
 <div class="card">
-<h3>Password Tools</h3>
-<p>Security utilities</p>
+<h3>Account Status</h3>
+<p>Secure</p>
 </div>
 
 <div class="card">
-<h3>Account Status</h3>
-<p>Protected</p>
+<h3>Security Level</h3>
+<p>High</p>
 </div>
+
+<div class="card">
+<h3>Tools</h3>
+<p>Password Utilities</p>
+</div>
+
+<div class="generator">
 
 <h2>Password Generator</h2>
 
-<input type="text" id="generated" readonly>
+<input type="text" id="passwordBox" readonly>
 
 <button onclick="generate()">Generate</button>
 
 <button onclick="copy()">Copy</button>
+
+</div>
 
 </div>
 
@@ -110,22 +132,23 @@ function generate(){
 fetch("/generate_password")
 .then(res=>res.json())
 .then(data=>{
-document.getElementById("generated").value=data.password
+document.getElementById("passwordBox").value=data.password
 })
 
 }
 
 function copy(){
 
-var copyText=document.getElementById("generated")
+var copyText=document.getElementById("passwordBox")
 
 copyText.select()
 document.execCommand("copy")
+
+alert("Password copied!")
 
 }
 
 </script>
 
 </body>
-
 </html>
