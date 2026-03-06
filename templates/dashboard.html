@@ -1,1 +1,131 @@
-<a href="/strength" class="btn">Check Password Strength</a>
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Dashboard</title>
+
+<style>
+
+body{
+margin:0;
+background:#0f172a;
+color:white;
+font-family:Arial;
+}
+
+.sidebar{
+width:220px;
+height:100vh;
+background:#020617;
+position:fixed;
+padding-top:20px;
+}
+
+.sidebar a{
+display:block;
+padding:15px;
+color:white;
+text-decoration:none;
+}
+
+.sidebar a:hover{
+background:#1e293b;
+}
+
+.main{
+margin-left:220px;
+padding:40px;
+}
+
+.card{
+background:#1e293b;
+padding:20px;
+margin:10px;
+border-radius:10px;
+display:inline-block;
+width:200px;
+text-align:center;
+}
+
+input{
+padding:10px;
+border:none;
+border-radius:5px;
+}
+
+button{
+padding:10px;
+background:#22c55e;
+border:none;
+border-radius:5px;
+color:white;
+cursor:pointer;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="sidebar">
+
+<h2 style="text-align:center;">🔐 Security</h2>
+
+<a href="/dashboard">Dashboard</a>
+<a href="/strength">Password Analyzer</a>
+<a href="/logout">Logout</a>
+
+</div>
+
+<div class="main">
+
+<h1>Welcome {{user}}</h1>
+
+<div class="card">
+<h3>Password Tools</h3>
+<p>Security utilities</p>
+</div>
+
+<div class="card">
+<h3>Account Status</h3>
+<p>Protected</p>
+</div>
+
+<h2>Password Generator</h2>
+
+<input type="text" id="generated" readonly>
+
+<button onclick="generate()">Generate</button>
+
+<button onclick="copy()">Copy</button>
+
+</div>
+
+<script>
+
+function generate(){
+
+fetch("/generate_password")
+.then(res=>res.json())
+.then(data=>{
+document.getElementById("generated").value=data.password
+})
+
+}
+
+function copy(){
+
+var copyText=document.getElementById("generated")
+
+copyText.select()
+document.execCommand("copy")
+
+}
+
+</script>
+
+</body>
+
+</html>
