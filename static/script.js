@@ -1,19 +1,18 @@
 function togglePassword(){
 
-let pass = document.getElementById("password");
+let pass=document.getElementById("password");
 
-if(pass.type === "password")
-pass.type = "text";
+if(pass.type==="password")
+pass.type="text";
 else
-pass.type = "password";
+pass.type="password";
 
 }
 
-
 function checkPassword(){
 
-let password = document.getElementById("password").value;
-let website = document.getElementById("website").value;
+let password=document.getElementById("password").value;
+let website=document.getElementById("website").value;
 
 fetch("/analyze",{
 
@@ -31,24 +30,25 @@ website:website
 })
 
 .then(res=>res.json())
+
 .then(data=>{
 
-document.getElementById("strengthText").innerText =
-"Strength : " + data.strength;
+document.getElementById("strengthText").innerText=
+"Strength : "+data.strength;
 
-document.getElementById("bar").style.width =
-data.percent + "%";
+document.getElementById("bar").style.width=
+data.percent+"%";
 
-document.getElementById("similarity").innerText =
-data.similarity + "% users used similar passwords on " + website;
+document.getElementById("similarity").innerText=
+data.similarity+"% of users on "+website+" use similar passwords";
 
-let list = document.getElementById("suggestions");
+let list=document.getElementById("suggestions");
 
 list.innerHTML="";
 
 data.suggestions.forEach(p=>{
 
-let li = document.createElement("li");
+let li=document.createElement("li");
 
 li.innerText=p;
 
