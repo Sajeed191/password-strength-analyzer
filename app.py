@@ -7,10 +7,7 @@ import math
 
 app = Flask(__name__)
 
-# Secret key for sessions
-app.config['SECRET_KEY'] = 'secretkey'
-
-# Database configuration
+app.config['SECRET_KEY'] = 'secretkey123'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///user.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -36,12 +33,11 @@ class User(UserMixin, db.Model):
 
 @login_manager.user_loader
 def load_user(user_id):
-
     return db.session.get(User, int(user_id))
 
 
 # =========================
-# PASSWORD STRENGTH CHECK
+# PASSWORD STRENGTH
 # =========================
 
 def check_password_strength(password):
@@ -134,6 +130,17 @@ def analyze():
 
 
 # =========================
+# DASHBOARD
+# =========================
+
+@app.route("/dashboard")
+@login_required
+def dashboard():
+
+    return render_template("dashboard.html")
+
+
+# =========================
 # REGISTER
 # =========================
 
@@ -144,10 +151,6 @@ def register():
 
         username = request.form.get("username")
         password = request.form.get("password")
-
-        if not username or not password:
-            flash("Please fill all fields")
-            return redirect(url_for("register"))
 
         existing_user = User.query.filter_by(username=username).first()
 
@@ -213,7 +216,7 @@ def logout():
 
 
 # =========================
-# RUN APP
+# RUN APPLICATION
 # =========================
 
 if __name__ == "__main__":
