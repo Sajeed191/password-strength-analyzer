@@ -1,28 +1,145 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
+<meta charset="UTF-8">
 <title>Login</title>
-<link rel="stylesheet" href="/static/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Poppins',sans-serif;
+}
+
+body{
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+overflow:hidden;
+}
+
+/* animated background glow */
+
+body::before{
+content:"";
+position:absolute;
+width:500px;
+height:500px;
+background:#00f5ff;
+filter:blur(200px);
+top:-100px;
+left:-100px;
+opacity:.3;
+}
+
+body::after{
+content:"";
+position:absolute;
+width:500px;
+height:500px;
+background:#ff00ff;
+filter:blur(200px);
+bottom:-100px;
+right:-100px;
+opacity:.3;
+}
+
+.card{
+width:350px;
+padding:40px;
+border-radius:20px;
+background:rgba(255,255,255,0.05);
+backdrop-filter:blur(20px);
+box-shadow:0 0 40px rgba(0,0,0,.3);
+color:white;
+text-align:center;
+}
+
+.card h2{
+margin-bottom:30px;
+font-weight:600;
+}
+
+.input-group{
+margin-bottom:20px;
+text-align:left;
+}
+
+.input-group label{
+font-size:14px;
+}
+
+.input-group input{
+width:100%;
+padding:12px;
+margin-top:5px;
+border:none;
+outline:none;
+border-radius:10px;
+background:rgba(255,255,255,0.1);
+color:white;
+}
+
+button{
+width:100%;
+padding:12px;
+border:none;
+border-radius:10px;
+background:linear-gradient(45deg,#00f5ff,#ff00ff);
+color:white;
+font-weight:600;
+cursor:pointer;
+transition:.3s;
+}
+
+button:hover{
+transform:scale(1.05);
+box-shadow:0 0 15px #00f5ff;
+}
+
+a{
+color:#00f5ff;
+text-decoration:none;
+font-size:14px;
+}
+
+.footer{
+margin-top:15px;
+}
+
+</style>
 </head>
 
 <body>
 
-<div class="container">
+<div class="card">
 
-<h2>Login</h2>
+<h2>🔐 Login</h2>
 
 <form method="POST">
 
-<input type="text" name="username" placeholder="Username" required>
+<div class="input-group">
+<label>Email</label>
+<input type="email" name="email" required>
+</div>
 
-<input type="password" name="password" placeholder="Password" required>
+<div class="input-group">
+<label>Password</label>
+<input type="password" name="password" required>
+</div>
 
 <button type="submit">Login</button>
 
 </form>
 
-<p>New user? <a href="/register">Register</a></p>
+<div class="footer">
+<p>Don't have an account? <a href="/register">Register</a></p>
+</div>
 
 </div>
 
