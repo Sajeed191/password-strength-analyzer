@@ -5,47 +5,29 @@
 
 <title>Security Dashboard</title>
 
-<link rel="stylesheet" href="/static/css/style.css">
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 </head>
 
-<body>
-
-<div class="container">
+<body style="background:#1e1e2f;color:white;text-align:center;font-family:sans-serif;">
 
 <h1>📊 Security Analytics Dashboard</h1>
 
-<p style="margin-bottom:20px;">
-Overview of password strength analysis
-</p>
+<p>Welcome {{ session.username }} 👋</p>
+
+<p>Password strength analysis</p>
 
 <canvas id="strengthChart" width="400" height="300"></canvas>
 
-<br>
+<br><br>
 
-<div style="margin-top:20px;">
-
-<a href="/">
-
-<button>
-🔍 Analyze New Password
-</button>
-
+<a href="/dashboard">
+<button>🔄 Refresh Dashboard</button>
 </a>
 
-</div>
-
-<br>
-
-<div>
+<br><br>
 
 <a href="/logout">Logout</a>
-
-</div>
-
-</div>
 
 <script>
 
@@ -57,54 +39,30 @@ type: 'pie',
 
 data: {
 
-labels: ['Weak', 'Medium', 'Strong'],
+labels: ['Weak','Medium','Strong'],
 
 datasets: [{
-
-label: 'Password Strength Distribution',
-
-data: [4, 6, 3],
+label: 'Password Strength',
+data: [{{ weak }}, {{ medium }}, {{ strong }}],
 
 backgroundColor: [
-
 '#ff4d4d',
-
 '#ffa500',
-
 '#4dff88'
-
-],
-
-borderWidth: 1
+]
 
 }]
 
 },
 
-options: {
-
-responsive: true,
-
-plugins: {
-
-legend: {
-
-labels: {
-
-color: "white",
-
-font: {
-
-size: 14
-
+options:{
+plugins:{
+legend:{
+labels:{
+color:"white"
 }
-
 }
-
 }
-
-}
-
 }
 
 });
