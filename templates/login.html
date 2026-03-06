@@ -121,22 +121,15 @@ margin-top:15px;
 
 <h2>🔐 Login</h2>
 
-<form method="POST">
+<form method="POST" action="/login">
 
-<div class="input-group">
-<label>Email</label>
-<input type="email" name="email" required>
-</div>
+<input type="text" name="username" required>
 
-<div class="input-group">
-<label>Password</label>
 <input type="password" name="password" required>
-</div>
 
 <button type="submit">Login</button>
 
 </form>
-
 <div class="footer">
 <p>Don't have an account? <a href="/register">Register</a></p>
 </div>
