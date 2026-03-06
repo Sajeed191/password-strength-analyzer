@@ -1,108 +1,83 @@
-from flask import Flask, render_template, request, redirect, session, jsonify
+from flask import Flask, render_template, request, jsonify
 import random
-import string
+import re
 
 app = Flask(__name__)
-app.secret_key = "secret123"
 
-# Dummy user database
-users = {
-    "admin": "admin123"
+# Dummy similarity dataset (for project purpose)
+website_similarity = {
+    "Amazon": random.randint(10,60),
+    "Flipkart": random.randint(10,60),
+    "Ajio": random.randint(10,60),
+    "Myntra": random.randint(10,60),
+    "Instagram": random.randint(10,60)
 }
 
-# Password strength function
-def password_strength(password):
+def check_strength(password):
 
     score = 0
 
     if len(password) >= 8:
-        score += 25
+        score += 1
 
-    if any(c.isupper() for c in password):
-        score += 25
+    if re.search("[a-z]", password):
+        score += 1
 
-    if any(c.isdigit() for c in password):
-        score += 25
+    if re.search("[A-Z]", password):
+        score += 1
 
-    if any(c in "!@#$%^&*" for c in password):
-        score += 25
+    if re.search("[0-9]", password):
+        score += 1
 
-    return score
+    if re.search("[@#$%^&*!]", password):
+        score += 1
 
+    levels = {
+        1: "Poor",
+        2: "Weak",
+        3: "Medium",
+        4: "Strong",
+        5: "Excellent"
+    }
 
-# LOGIN
-@app.route("/", methods=["GET","POST"])
-def login():
-
-    if request.method == "POST":
-
-        username = request.form["username"]
-        password = request.form["password"]
-
-        if username in users and users[username] == password:
-
-            session["user"] = username
-            return redirect("/dashboard")
-
-    return render_template("login.html")
+    return levels.get(score, "Poor"), score*20
 
 
-# DASHBOARD
-@app.route("/dashboard")
-def dashboard():
+def suggest_password(password):
 
-    if "user" not in session:
-        return redirect("/")
+    suggestions = []
 
-    return render_template("dashboard.html", user=session["user"])
+    for i in range(3):
+        new = password + str(random.randint(10,99)) + "@"
+        suggestions.append(new)
 
-
-# PASSWORD STRENGTH
-@app.route("/strength", methods=["GET","POST"])
-def strength():
-
-    result = None
-    score = None
-
-    if request.method == "POST":
-
-        password = request.form["password"]
-
-        score = password_strength(password)
-
-        if score <= 25:
-            result = "POOR"
-
-        elif score <= 50:
-            result = "WEAK"
-
-        elif score <= 75:
-            result = "GOOD"
-
-        else:
-            result = "EXCELLENT"
-
-    return render_template("strength.html", result=result, score=score)
+    return suggestions
 
 
-# PASSWORD GENERATOR
-@app.route("/generate_password")
-def generate_password():
-
-    characters = string.ascii_letters + string.digits + "!@#$%^&*"
-
-    password = "".join(random.choice(characters) for i in range(12))
-
-    return jsonify({"password": password})
+@app.route('/')
+def home():
+    return render_template("index.html")
 
 
-# LOGOUT
-@app.route("/logout")
-def logout():
+@app.route('/analyze', methods=["POST"])
+def analyze():
 
-    session.pop("user", None)
+    data = request.json
+    password = data["password"]
+    website = data["website"]
 
-    return redirect("/")
+    strength, percent = check_strength(password)
+
+    similarity = website_similarity.get(website, random.randint(10,60))
+
+    suggestions = suggest_password(password)
+
+    return jsonify({
+        "strength": strength,
+        "percent": percent,
+        "similarity": similarity,
+        "suggestions": suggestions
+    })
 
 
 if __name__ == "__main__":
