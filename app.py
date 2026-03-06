@@ -1,30 +1,26 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 
-# Secret key for sessions
-app.config['SECRET_KEY'] = 'secret123'
-
-# SQLite database
+app.config['SECRET_KEY'] = 'secretkey'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
-
 # -----------------------------
-# Database Model
+# DATABASE MODEL
 # -----------------------------
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(100), unique=True, nullable=False)
+    username = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
 
 
 # -----------------------------
-# Home Route
+# HOME
 # -----------------------------
 @app.route('/')
 def home():
@@ -32,7 +28,7 @@ def home():
 
 
 # -----------------------------
-# Register
+# REGISTER
 # -----------------------------
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -42,38 +38,38 @@ def register():
         username = request.form.get('username')
         password = request.form.get('password')
 
-        # Check if username exists
-        user = User.query.filter_by(username=username).first()
-
-        if user:
-            flash("Username already exists. Please choose another.", "danger")
+        if not username or not password:
+            flash("Please fill all fields")
             return redirect(url_for('register'))
 
-        # Hash password
+        # check existing user
+        existing_user = User.query.filter_by(username=username).first()
+
+        if existing_user:
+            flash("Username already exists")
+            return redirect(url_for('register'))
+
         hashed_password = generate_password_hash(password)
 
-        new_user = User(
-            username=username,
-            password=hashed_password
-        )
+        new_user = User(username=username, password=hashed_password)
 
         try:
             db.session.add(new_user)
             db.session.commit()
 
-            flash("Account created successfully!", "success")
-            return redirect(url_for('login'))
-
-        except Exception as e:
+        except:
             db.session.rollback()
-            flash("Registration failed. Try again.", "danger")
+            flash("Error creating account")
             return redirect(url_for('register'))
+
+        flash("Account created successfully")
+        return redirect(url_for('login'))
 
     return render_template('register.html')
 
 
 # -----------------------------
-# Login
+# LOGIN
 # -----------------------------
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -90,18 +86,16 @@ def login():
             session['user_id'] = user.id
             session['username'] = user.username
 
-            flash("Login successful!", "success")
             return redirect(url_for('dashboard'))
 
         else:
-            flash("Invalid username or password.", "danger")
-            return redirect(url_for('login'))
+            flash("Invalid username or password")
 
     return render_template('login.html')
 
 
 # -----------------------------
-# Dashboard
+# DASHBOARD
 # -----------------------------
 @app.route('/dashboard')
 def dashboard():
@@ -113,26 +107,24 @@ def dashboard():
 
 
 # -----------------------------
-# Logout
+# LOGOUT
 # -----------------------------
 @app.route('/logout')
 def logout():
 
     session.clear()
-    flash("Logged out successfully.", "info")
-
     return redirect(url_for('login'))
 
 
 # -----------------------------
-# Create Database
+# DATABASE CREATE
 # -----------------------------
 with app.app_context():
     db.create_all()
 
 
 # -----------------------------
-# Run App
+# RUN
 # -----------------------------
 if __name__ == "__main__":
     app.run(debug=True)
