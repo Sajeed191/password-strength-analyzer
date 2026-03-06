@@ -1,48 +1,48 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 
-<title>Password Analyzer</title>
+<title>Password Strength</title>
 
 <style>
 
 body{
 background:#0f172a;
 color:white;
-font-family:Arial;
 text-align:center;
+font-family:Arial;
 }
 
-.container{
-margin-top:80px;
-}
-
-input,select{
-padding:12px;
+input{
+padding:10px;
 margin:10px;
-width:250px;
-border-radius:6px;
+width:220px;
 border:none;
+border-radius:5px;
 }
 
 button{
-padding:12px 20px;
+padding:10px 20px;
 background:#22c55e;
 border:none;
 color:white;
-border-radius:6px;
-cursor:pointer;
+border-radius:5px;
 }
 
-.strength{
-margin-top:20px;
-font-size:22px;
+.bar{
+width:300px;
+height:20px;
+background:#1e293b;
+margin:auto;
+border-radius:10px;
 }
 
-.poor{color:red;}
-.weak{color:orange;}
-.good{color:yellow;}
-.excellent{color:lime;}
+.fill{
+height:100%;
+background:#22c55e;
+border-radius:10px;
+}
 
 </style>
 
@@ -50,70 +50,29 @@ font-size:22px;
 
 <body>
 
-<div class="container">
-
 <h1>Password Strength Analyzer</h1>
 
 <form method="POST">
 
-<input type="password" id="password" name="password" placeholder="Enter Password" required>
-
-<button type="button" onclick="toggle()">👁</button>
+<input type="password" name="password" placeholder="Enter password">
 
 <br>
 
-<select name="website">
-
-<option value="amazon">Amazon</option>
-<option value="flipkart">Flipkart</option>
-<option value="ajio">Ajio</option>
-<option value="myntra">Myntra</option>
-
-</select>
-
-<br>
-
-<button type="submit">Check Strength</button>
+<button type="submit">Check</button>
 
 </form>
 
-{% if result %}
+{% if score %}
 
-<div class="strength">
+<h2>{{result}}</h2>
 
-<h2>Strength: {{result}}</h2>
-
-<p>Estimated Similar Password Usage: {{percent}}%</p>
-
-<h3>Suggested Strong Passwords</h3>
-
-<ul>
-{% for s in suggestions %}
-<li>{{s}}</li>
-{% endfor %}
-</ul>
-
+<div class="bar">
+<div class="fill" style="width:{{score}}%"></div>
 </div>
+
+<p>{{score}}% strength</p>
 
 {% endif %}
-
-</div>
-
-<script>
-
-function toggle(){
-
-var x=document.getElementById("password");
-
-if(x.type==="password"){
-x.type="text";
-}else{
-x.type="password";
-}
-
-}
-
-</script>
 
 </body>
 
