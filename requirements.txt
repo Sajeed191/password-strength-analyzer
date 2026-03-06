@@ -1,5 +1,2 @@
 flask
-pyotp
-requests
-werkzeug
 gunicorn
