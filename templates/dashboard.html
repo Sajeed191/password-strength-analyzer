@@ -1,74 +1,13 @@
-<!DOCTYPE html>
-<html>
+<link rel="stylesheet" href="/static/css/style.css">
 
-<head>
+<div class="container">
 
-<title>Security Dashboard</title>
+<h2>Welcome Hacker</h2>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<p>AI Generated Password:</p>
 
-</head>
-
-<body style="background:#1e1e2f;color:white;text-align:center;font-family:sans-serif;">
-
-<h1>📊 Security Analytics Dashboard</h1>
-
-<p>Welcome {{ session.username }} 👋</p>
-
-<p>Password strength analysis</p>
-
-<canvas id="strengthChart" width="400" height="300"></canvas>
-
-<br><br>
-
-<a href="/dashboard">
-<button>🔄 Refresh Dashboard</button>
-</a>
-
-<br><br>
+<h3>{{ password }}</h3>
 
 <a href="/logout">Logout</a>
 
-<script>
-
-var ctx = document.getElementById('strengthChart').getContext('2d');
-
-var strengthChart = new Chart(ctx, {
-
-type: 'pie',
-
-data: {
-
-labels: ['Weak','Medium','Strong'],
-
-datasets: [{
-label: 'Password Strength',
-data: [{{ weak }}, {{ medium }}, {{ strong }}],
-
-backgroundColor: [
-'#ff4d4d',
-'#ffa500',
-'#4dff88'
-]
-
-}]
-
-},
-
-options:{
-plugins:{
-legend:{
-labels:{
-color:"white"
-}
-}
-}
-}
-
-});
-
-</script>
-
-</body>
-
-</html>
+</div>
