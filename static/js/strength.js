@@ -5,7 +5,6 @@ let text = document.getElementById("strength-text")
 password.addEventListener("input", function(){
 
 let value = password.value
-
 let score = 0
 
 if(value.length >= 8){
