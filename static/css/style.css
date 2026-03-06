@@ -1,182 +1,43 @@
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family: 'Segoe UI', sans-serif;
-}
-
 body{
-
-height:100vh;
-
-display:flex;
-justify-content:center;
-align-items:center;
-
-background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
-
-color:white;
-
+background:black;
+color:#00ff9c;
+font-family:Courier New;
 }
-
-/* glass container */
 
 .container{
-
-width:420px;
-
-padding:40px;
-
-border-radius:20px;
-
-background:rgba(255,255,255,0.08);
-
-backdrop-filter:blur(20px);
-
-box-shadow:0 0 40px rgba(0,0,0,0.5);
-
+width:350px;
+margin:auto;
+margin-top:120px;
+padding:30px;
+border:1px solid #00ff9c;
 text-align:center;
-
-animation:fadeIn 1s ease;
-
+box-shadow:0 0 20px #00ff9c;
 }
-
-h1{
-
-margin-bottom:20px;
-
-font-weight:600;
-
-letter-spacing:1px;
-
-}
-
-/* input field */
 
 input{
-
-width:100%;
-
-padding:14px;
-
-margin-top:20px;
-
-border:none;
-
-outline:none;
-
-border-radius:10px;
-
-background:rgba(255,255,255,0.1);
-
-color:white;
-
-font-size:16px;
-
-transition:0.3s;
-
+width:90%;
+padding:10px;
+margin:10px;
+background:black;
+border:1px solid #00ff9c;
+color:#00ff9c;
 }
-
-input:focus{
-
-background:rgba(255,255,255,0.2);
-
-}
-
-/* button */
 
 button{
-
-width:100%;
-
-margin-top:25px;
-
-padding:14px;
-
+padding:10px;
+width:95%;
+background:#00ff9c;
 border:none;
-
-border-radius:10px;
-
-font-size:16px;
-
-font-weight:600;
-
+color:black;
+font-weight:bold;
 cursor:pointer;
-
-background:linear-gradient(90deg,#00f2fe,#4facfe);
-
-color:white;
-
-transition:0.3s;
-
 }
-
-button:hover{
-
-transform:scale(1.05);
-
-box-shadow:0 0 20px #4facfe;
-
-}
-
-/* strength bar */
-
-#strength-bar{
-
-height:10px;
-
-width:0%;
-
-border-radius:10px;
-
-margin-top:15px;
-
-transition:0.4s;
-
-}
-
-#strength-text{
-
-margin-top:10px;
-
-font-size:14px;
-
-}
-
-/* links */
 
 a{
-
-display:inline-block;
-
-margin-top:20px;
-
-color:#00f2fe;
-
-text-decoration:none;
-
-transition:0.3s;
-
+color:#00ff9c;
 }
 
-a:hover{
-
-color:#4facfe;
-
-}
-
-/* animation */
-
-@keyframes fadeIn{
-
-from{
-opacity:0;
-transform:translateY(20px);
-}
-
-to{
-opacity:1;
-transform:translateY(0);
-}
-
+.strength{
+margin-top:5px;
+font-size:14px;
 }
