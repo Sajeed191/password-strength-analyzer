@@ -1,87 +1,101 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Login</title>
+from flask import Flask, render_template, request, redirect, session, jsonify
+import random
+import string
 
-    <style>
-        body{
-            font-family: Arial;
-            background:#1e1e2f;
-            color:white;
-            display:flex;
-            justify-content:center;
-            align-items:center;
-            height:100vh;
-        }
+app = Flask(__name__)
+app.secret_key = "secret123"
 
-        .container{
-            background:#2b2b40;
-            padding:30px;
-            border-radius:10px;
-            width:300px;
-            text-align:center;
-        }
+# Dummy user database
+users = {
+    "admin":"admin123"
+}
 
-        input{
-            width:90%;
-            padding:10px;
-            margin:10px 0;
-            border:none;
-            border-radius:5px;
-        }
+# Password strength function
+def password_strength(password):
 
-        button{
-            width:100%;
-            padding:10px;
-            background:#4CAF50;
-            border:none;
-            color:white;
-            border-radius:5px;
-            cursor:pointer;
-        }
+    score = 0
 
-        a{
-            color:#4da6ff;
-            text-decoration:none;
-        }
+    if len(password) >= 8:
+        score += 25
+    if any(c.isupper() for c in password):
+        score += 25
+    if any(c.isdigit() for c in password):
+        score += 25
+    if any(c in "!@#$%^&*" for c in password):
+        score += 25
 
-        a:hover{
-            text-decoration:underline;
-        }
-    </style>
+    return score
 
-</head>
 
-<body>
+# Login
+@app.route("/", methods=["GET","POST"])
+def login():
 
-<div class="container">
+    if request.method == "POST":
 
-<h2>Login</h2>
+        username = request.form["username"]
+        password = request.form["password"]
 
-{% with messages = get_flashed_messages() %}
-{% if messages %}
-{% for message in messages %}
-<p style="color:#ff6b6b;">{{ message }}</p>
-{% endfor %}
-{% endif %}
-{% endwith %}
+        if username in users and users[username] == password:
 
-<form method="POST">
+            session["user"] = username
+            return redirect("/dashboard")
 
-<input type="text" name="username" placeholder="Username" required>
+    return render_template("login.html")
 
-<input type="password" name="password" placeholder="Password" required>
 
-<button type="submit">Login</button>
+# Dashboard
+@app.route("/dashboard")
+def dashboard():
 
-</form>
+    if "user" not in session:
+        return redirect("/")
 
-<br>
+    return render_template("dashboard.html", user=session["user"])
 
-<p>Don't have an account?  
-<a href="/register">Register</a></p>
 
-</div>
+# Password strength checker
+@app.route("/strength", methods=["GET","POST"])
+def strength():
 
-</body>
-</html>
+    result = None
+    score = None
+
+    if request.method == "POST":
+
+        password = request.form["password"]
+        score = password_strength(password)
+
+        if score <= 25:
+            result = "POOR"
+        elif score <= 50:
+            result = "WEAK"
+        elif score <= 75:
+            result = "GOOD"
+        else:
+            result = "EXCELLENT"
+
+    return render_template("strength.html", result=result, score=score)
+
+
+# Password generator API
+@app.route("/generate_password")
+def generate_password():
+
+    characters = string.ascii_letters + string.digits + "!@#$%^&*"
+
+    password = ''.join(random.choice(characters) for i in range(12))
+
+    return jsonify({"password":password})
+
+
+# Logout
+@app.route("/logout")
+def logout():
+
+    session.pop("user",None)
+    return redirect("/")
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
